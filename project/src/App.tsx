@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react"
-import { useSoundEffects } from './hooks/useSoundEffects';
+import { useSoundEffects } from "./hooks/useSoundEffects"
 
 type GameState =
   | "MENU"
@@ -254,7 +254,6 @@ Boa sorte. Você vai precisar.
 
 [ ENTER / CLIQUE PARA INICIAR O TURNO ]`
 
-// ── image imports (Vite resolves these at build time) ──
 import bgIncoming from "./assets/scene-incoming.jpg"
 import bgActive from "./assets/scene-active.jpg"
 import bgActiveStressed from "./assets/scene-active-stressed.jpg"
@@ -270,7 +269,6 @@ const createInitialFleet = (): FleetStatus => ({
 const getDecisionTime = (scenarioIndex: number) =>
   Math.max(20, 45 - scenarioIndex * 3)
 
-// ── Stat bar ──────────────────────────────────────────
 function StatBar({ label, value }: { label: string; value: number }) {
   const isDanger = value <= 30
   const barColor = value <= 0 ? "#ff0000" : isDanger ? "#cc2222" : "#d4a017"
@@ -337,7 +335,6 @@ function StatBar({ label, value }: { label: string; value: number }) {
   )
 }
 
-// ── Fire department fleet panel ───────────────────────
 function FleetPanel({ fleet }: { fleet: FleetStatus }) {
   return (
     <div
@@ -394,7 +391,6 @@ function FleetPanel({ fleet }: { fleet: FleetStatus }) {
   )
 }
 
-// ── Header overlay ────────────────────────────────────
 function Header({ morale, conduct }: { morale: number; conduct: number }) {
   return (
     <div
@@ -432,13 +428,11 @@ function Header({ morale, conduct }: { morale: number; conduct: number }) {
   )
 }
 
-// ── Monitor overlay ───────────────────────────────────
 function Monitor({ children }: { children: React.ReactNode }) {
   return (
     <div
       style={{
         position: "absolute",
-        // matches the AOC monitor position in the reference images
         top: "14%",
         left: "2%",
         width: "40%",
@@ -455,7 +449,6 @@ function Monitor({ children }: { children: React.ReactNode }) {
         gap: 8,
       }}
     >
-      {/* scanlines */}
       <div
         style={{
           position: "absolute",
@@ -482,7 +475,6 @@ function Monitor({ children }: { children: React.ReactNode }) {
   )
 }
 
-// ── Action bar ────────────────────────────────────────
 function ActionBar({ children }: { children: React.ReactNode }) {
   return (
     <div
@@ -508,7 +500,6 @@ function ActionBar({ children }: { children: React.ReactNode }) {
   )
 }
 
-// ── Timer bar ─────────────────────────────────────────
 function TimerBar({ value, max }: { value: number; max: number }) {
   const pct = (value / max) * 100
   const color = pct > 60 ? "#39ff14" : pct > 30 ? "#d4a017" : "#ff3333"
@@ -547,7 +538,6 @@ function TimerBar({ value, max }: { value: number; max: number }) {
   )
 }
 
-// ── Button ────────────────────────────────────────────
 function Btn({
   onClick,
   color = "#39ff14",
@@ -585,7 +575,6 @@ function Btn({
   )
 }
 
-// ── Shared green text style ───────────────────────────
 const G = {
   color: "#39ff14",
   fontFamily: "'Share Tech Mono', monospace",
@@ -604,7 +593,6 @@ const WHITE = {
   fontSize: 12,
 }
 
-// ── Game Scene wrapper ────────────────────────────────
 function Scene({ bg, children }: { bg: string; children: React.ReactNode }) {
   return (
     <div
@@ -633,7 +621,6 @@ function Scene({ bg, children }: { bg: string; children: React.ReactNode }) {
   )
 }
 
-// ─────────────────────────────────────────────────────
 export default function App() {
   const {
     playBGM,
@@ -649,7 +636,7 @@ export default function App() {
     startLowMoraleAmbience,
     stopLowMoraleAmbience,
   } = useSoundEffects()
-  
+
   const [gameState, setGameState] = useState<GameState>("MENU")
   const [morale, setMorale] = useState(60)
   const [conduct, setConduct] = useState(80)
@@ -695,7 +682,7 @@ export default function App() {
         })
       }, 1000)
     },
-    [stopTimer],
+    [stopTimer]
   )
 
   const checkGameOver = useCallback(
@@ -704,20 +691,40 @@ export default function App() {
         setGameOverReason(
           m <= 0
             ? "Moral da guarnição zerada. A equipe recusou-se a sair para qualquer chamada."
-            : "Conduta militar severamente comprometida. Transgressão enviada ao Comando.",
+            : "Conduta militar severamente comprometida. Transgressão enviada ao Comando."
         )
         stopTimer()
         setGameState("GAME_OVER")
-        playGameOver() 
+        playGameOver()
         return true
       }
       return false
     },
-    [stopTimer, playGameOver],
+    [stopTimer, playGameOver]
   )
 
   const processDecision = useCallback(
     (decision: Decision) => {
+      const s = SCENARIOS[scenarioIdx]
+      const chosenUnits = (["ABTR", "SIATE"] as FireUnit[]).filter(
+        (unit) => selectedUnits[unit]
+      )
+
+      if (decision === "FIRE" && chosenUnits.length === 0) {
+        setDispatchAlert("SELECIONE AO MENOS UMA VIATURA DO 193")
+        playError()
+        return
+      }
+
+      const unavailableUnit = chosenUnits.find(
+        (unit) => fleet[unit].total - fleet[unit].returnAfter.length <= 0
+      )
+      if (decision === "FIRE" && unavailableUnit) {
+        setDispatchAlert(`SEM VIATURA ${unavailableUnit} DISPONÍVEL`)
+        playError()
+        return
+      }
+
       stopTimer()
       stopPhoneRing(false)
       setDispatchAlert("")
@@ -732,25 +739,41 @@ export default function App() {
           (hasCorrectUnits && selectedCode === s.requiredCode))
       setIsCorrectDecision(correct)
 
+      const nextCallsCompleted = callsCompleted + 1
+      setCallsCompleted(nextCallsCompleted)
+      setFleet((currentFleet) => {
+        const nextFleet = createInitialFleet()
+        ;(["ABTR", "SIATE"] as FireUnit[]).forEach((unit) => {
+          const newlyEmployed =
+            decision === "FIRE" && chosenUnits.includes(unit)
+              ? [callsCompleted + 2]
+              : []
+          nextFleet[unit].returnAfter = [
+            ...currentFleet[unit].returnAfter,
+            ...newlyEmployed,
+          ].filter((returnAfter) => returnAfter > nextCallsCompleted)
+        })
+        return nextFleet
+      })
+
       const newMorale = Math.min(
         100,
         Math.max(
           0,
-          morale + (correct ? s.moraleEffect.correct : s.moraleEffect.wrong),
-        ),
+          morale + (correct ? s.moraleEffect.correct : s.moraleEffect.wrong)
+        )
       )
       const newConduct = Math.min(
         100,
         Math.max(
           0,
-          conduct + (correct ? s.conductEffect.correct : s.conductEffect.wrong),
-        ),
+          conduct + (correct ? s.conductEffect.correct : s.conductEffect.wrong)
+        )
       )
       setFeedbackText(correct ? s.feedback.correct : s.feedback.wrong)
       setMorale(newMorale)
       setConduct(newConduct)
 
-      // Só toca efeito de decisão se não tiver engatilhado Game Over imediato
       if (!checkGameOver(newMorale, newConduct)) {
         if (!correct) {
           playError()
@@ -759,10 +782,8 @@ export default function App() {
           decision === "SAMU" ||
           decision === "PM"
         ) {
-          // Toca sirene para Código 2 do 193 e para emergências críticas de SAMU/PM
           playDispatchCode2()
         } else {
-          // Toca som de discagem/transferência para Código 1, GM (153) e Trote negado
           playConfirmTransfer()
         }
         setGameState("FEEDBACK")
@@ -777,10 +798,12 @@ export default function App() {
       morale,
       conduct,
       stopTimer,
+      stopPhoneRing,
       checkGameOver,
       playError,
       playDispatchCode2,
-    ],
+      playConfirmTransfer,
+    ]
   )
 
   const goNextScenario = useCallback(() => {
@@ -802,22 +825,25 @@ export default function App() {
       setGameState("ACTIVE")
       startCountdown(getDecisionTime(next), () => processDecision("DENY"))
     })
-  }, [scenarioIdx, startCountdown, processDecision, playPhoneRing, stopPhoneRing, stopAllSFX, playWin])
+  }, [
+    scenarioIdx,
+    startCountdown,
+    processDecision,
+    playPhoneRing,
+    stopPhoneRing,
+    stopAllSFX,
+    playWin,
+  ])
 
   const answerCall = useCallback(() => {
     stopTimer()
-    stopPhoneRing()
+    stopPhoneRing(true)
     setGameState("ACTIVE")
     startCountdown(decisionTime, () => processDecision("DENY"))
-  }, [
-    stopTimer,
-    startCountdown,
-    decisionTime,
-    processDecision,
-    stopPhoneRing,
-  ])
+  }, [stopTimer, startCountdown, decisionTime, processDecision, stopPhoneRing])
 
   const startGame = useCallback(() => {
+    stopAllSFX()
     setMorale(60)
     setConduct(80)
     setScenarioIdx(0)
@@ -828,19 +854,21 @@ export default function App() {
     setDispatchAlert("")
     setGameState("BRIEFING")
     playBGM()
-  }, [playBGM])
+  }, [playBGM, stopAllSFX])
 
   const beginShift = useCallback(() => {
     setGameState("INCOMING")
     playPhoneRing()
     startCountdown(25, () => {
+      stopPhoneRing(false)
       setGameState("ACTIVE")
       startCountdown(getDecisionTime(0), () => processDecision("DENY"))
     })
-  }, [startCountdown, processDecision, playPhoneRing])
+  }, [startCountdown, processDecision, playPhoneRing, stopPhoneRing])
 
   const restartFromGameOver = useCallback(() => {
     stopTimer()
+    stopAllSFX()
     setMorale(60)
     setConduct(80)
     setScenarioIdx(0)
@@ -853,12 +881,20 @@ export default function App() {
     playBGM()
     playPhoneRing()
     startCountdown(25, () => {
+      stopPhoneRing(false)
       setGameState("ACTIVE")
       startCountdown(getDecisionTime(0), () => processDecision("DENY"))
     })
-  }, [stopTimer, startCountdown, processDecision, playBGM, playPhoneRing])
+  }, [
+    stopTimer,
+    stopAllSFX,
+    startCountdown,
+    processDecision,
+    playBGM,
+    playPhoneRing,
+    stopPhoneRing,
+  ])
 
-  // Whispers quando moral baixa
   useEffect(() => {
     if (morale < 40 && gameState !== "GAME_OVER" && gameState !== "MENU") {
       startLowMoraleAmbience()
@@ -867,7 +903,6 @@ export default function App() {
     }
   }, [morale, gameState, startLowMoraleAmbience, stopLowMoraleAmbience])
 
-  // Briefing typewriter
   useEffect(() => {
     if (gameState !== "BRIEFING") {
       if (briefRef.current) {
@@ -890,7 +925,6 @@ export default function App() {
     return () => clearInterval(id)
   }, [gameState])
 
-  // Global keyboard
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase()
@@ -934,6 +968,8 @@ export default function App() {
         if (k === "a") restartFromGameOver()
         if (k === "s") {
           stopTimer()
+          stopBGM()
+          stopAllSFX()
           setMorale(60)
           setConduct(80)
           setGameState("MENU")
@@ -941,6 +977,8 @@ export default function App() {
       }
       if (gameState === "WIN" && k === "enter") {
         stopTimer()
+        stopBGM()
+        stopAllSFX()
         setMorale(60)
         setConduct(80)
         setGameState("MENU")
@@ -958,9 +996,10 @@ export default function App() {
     beginShift,
     restartFromGameOver,
     stopTimer,
+    stopBGM,
+    stopAllSFX,
   ])
 
-  // ── MENU ──────────────────────────────────────────────
   if (gameState === "MENU") {
     return (
       <div
@@ -976,7 +1015,6 @@ export default function App() {
           position: "relative",
         }}
       >
-        {/* Scanlines */}
         <div
           style={{
             position: "fixed",
@@ -1102,7 +1140,6 @@ export default function App() {
     )
   }
 
-  // ── INSTRUCTIONS ──────────────────────────────────────
   if (gameState === "INSTRUCTIONS") {
     const instructions = [
       {
@@ -1275,7 +1312,6 @@ export default function App() {
     )
   }
 
-  // ── BRIEFING ─────────────────────────────────────────
   if (gameState === "BRIEFING") {
     const done = briefCursor >= BRIEFING_TEXT.length
     return (
@@ -1300,7 +1336,6 @@ export default function App() {
             position: "relative",
           }}
         >
-          {/* scanlines */}
           <div
             style={{
               position: "absolute",
@@ -1376,7 +1411,6 @@ export default function App() {
     )
   }
 
-  // ── INCOMING CALL ─────────────────────────────────────
   if (gameState === "INCOMING") {
     return (
       <Scene bg={bgIncoming}>
@@ -1449,7 +1483,6 @@ export default function App() {
     )
   }
 
-  // ── ACTIVE CALL ───────────────────────────────────────
   if (gameState === "ACTIVE") {
     return (
       <Scene bg={morale < 40 ? bgActiveStressed : bgActive}>
@@ -1509,364 +1542,4 @@ export default function App() {
             }}
           >
             <div style={G}>
-              Localização: <span style={WHITE}>[{scenario.location}]</span>
-            </div>
-            <div style={G}>
-              Natureza: <span style={WHITE}>[{scenario.nature}]</span>
-            </div>
-            <div style={G}>
-              Vítimas: <span style={WHITE}>[{scenario.victims}]</span>
-            </div>
-          </div>
-          <div
-            style={{
-              borderTop: "1px solid #1a3a1a",
-              paddingTop: 6,
-              fontSize: 10,
-            }}
-          >
-            <div style={G}>
-              Prioridade:{" "}
-              <span
-                onClick={() => setSelectedCode(1)}
-                style={{
-                  cursor: "pointer",
-                  color: selectedCode === 1 ? "#39ff14" : "#3a6a3a",
-                  textDecoration: selectedCode === 1 ? "underline" : "none",
-                }}
-              >
-                [CÓDIGO 1]
-              </span>{" "}
-              <span
-                onClick={() => setSelectedCode(2)}
-                style={{
-                  cursor: "pointer",
-                  color: selectedCode === 2 ? "#ff9900" : "#6a4a20",
-                  textDecoration: selectedCode === 2 ? "underline" : "none",
-                }}
-              >
-                [CÓDIGO 2{selectedCode === 2 ? " ✓" : ""}]
-              </span>
-            </div>
-            <div style={{ ...G, fontSize: 10, marginTop: 5 }}>
-              Viaturas 193:{" "}
-              <span
-                onClick={() =>
-                  setSelectedUnits((current) => ({
-                    ...current,
-                    ABTR: !current.ABTR,
-                  }))
-                }
-                style={{
-                  cursor: "pointer",
-                  color: selectedUnits.ABTR ? "#39ff14" : "#3a6a3a",
-                }}
-              >
-                [ABTR{selectedUnits.ABTR ? " ✓" : ""}]
-              </span>{" "}
-              <span
-                onClick={() =>
-                  setSelectedUnits((current) => ({
-                    ...current,
-                    SIATE: !current.SIATE,
-                  }))
-                }
-                style={{
-                  cursor: "pointer",
-                  color: selectedUnits.SIATE ? "#39ff14" : "#3a6a3a",
-                }}
-              >
-                [SIATE{selectedUnits.SIATE ? " ✓" : ""}]
-              </span>
-            </div>
-            {dispatchAlert && (
-              <div
-                style={{
-                  color: "#ff3333",
-                  fontFamily: "'Press Start 2P', monospace",
-                  fontSize: 7,
-                  marginTop: 6,
-                  animation: "blink 0.8s infinite",
-                }}
-              >
-                {dispatchAlert}
-              </div>
-            )}
-            <div style={{ color: "#5a8a5a", fontSize: 9, marginTop: 4 }}>
-              193: A/I + Z &nbsp;|&nbsp; Órgãos: M/P/G &nbsp;|&nbsp; Trote: X
-            </div>
-          </div>
-        </Monitor>
-        <ActionBar>
-          <Btn onClick={() => setSelectedCode(1)} color="#39ff14">
-            [1] CÓDIGO 1
-          </Btn>
-          <Btn onClick={() => setSelectedCode(2)} color="#ff9900">
-            [2] CÓDIGO 2
-          </Btn>
-          <Btn
-            onClick={() =>
-              setSelectedUnits((current) => ({
-                ...current,
-                ABTR: !current.ABTR,
-              }))
-            }
-            color={selectedUnits.ABTR ? "#39ff14" : "#5a8a5a"}
-          >
-            [A] ABTR
-          </Btn>
-          <Btn
-            onClick={() =>
-              setSelectedUnits((current) => ({
-                ...current,
-                SIATE: !current.SIATE,
-              }))
-            }
-            color={selectedUnits.SIATE ? "#39ff14" : "#5a8a5a"}
-          >
-            [I] SIATE
-          </Btn>
-          <Btn onClick={() => processDecision("FIRE")} color="#d4a017">
-            [Z] DESPACHAR 193
-          </Btn>
-          <Btn onClick={() => processDecision("SAMU")} color="#39ff14">
-            [M] SAMU 192
-          </Btn>
-          <Btn onClick={() => processDecision("PM")} color="#4aa3ff">
-            [P] PM 190
-          </Btn>
-          <Btn onClick={() => processDecision("GM")} color="#62c5a8">
-            [G] GM 153
-          </Btn>
-          <Btn onClick={() => processDecision("DENY")} color="#cc2222">
-            [X] TROTE / NEGAR
-          </Btn>
-        </ActionBar>
-      </Scene>
-    )
-  }
-
-  // ── FEEDBACK ──────────────────────────────────────────
-  if (gameState === "FEEDBACK") {
-    return (
-      <Scene
-        bg={
-          isCorrectDecision
-            ? bgFeedbackSuccess
-            : morale < 40
-              ? bgActiveStressed
-              : bgActive
-        }
-      >
-        <Header morale={morale} conduct={conduct} />
-        <Monitor>
-          <FleetPanel fleet={fleet} />
-          <div
-            style={{
-              fontFamily: "'Press Start 2P', monospace",
-              fontSize: 9,
-              color: isCorrectDecision ? "#39ff14" : "#ff3333",
-              textAlign: "center",
-              textShadow: `0 0 8px ${
-                isCorrectDecision ? "#39ff14" : "#ff3333"
-              }`,
-              padding: "4px 0",
-            }}
-          >
-            {isCorrectDecision
-              ? "▸ DESPACHO CORRETO ◂"
-              : "▸ ERRO DE PROTOCOLO ◂"}
-          </div>
-          <div style={{ borderTop: "1px solid #1a3a1a", paddingTop: 8 }}>
-            <div style={GOLD}>[RELATÓRIO DE RÁDIO]</div>
-            <div
-              style={{ ...WHITE, fontSize: 12, lineHeight: 2, marginTop: 6 }}
-            >
-              {feedbackText}
-            </div>
-          </div>
-          <div
-            style={{
-              borderTop: "1px solid #1a3a1a",
-              paddingTop: 8,
-              marginTop: "auto",
-            }}
-          >
-            <div style={{ ...G, fontSize: 11 }}>
-              Moral: {morale}/100 &nbsp;|&nbsp; Conduta: {conduct}/100
-            </div>
-          </div>
-        </Monitor>
-        <ActionBar>
-          <span
-            style={{
-              color: "#666",
-              fontFamily: "'Share Tech Mono', monospace",
-              fontSize: 12,
-            }}
-          >
-            Chamada {scenarioIdx + 1} de {SCENARIOS.length} concluída
-          </span>
-          <Btn onClick={goNextScenario} color="#d4a017">
-            [ENTER] PRÓXIMA CHAMADA
-          </Btn>
-        </ActionBar>
-      </Scene>
-    )
-  }
-
-  // ── GAME OVER ─────────────────────────────────────────
-  if (gameState === "GAME_OVER") {
-    return (
-      <Scene bg={bgGameOver}>
-        <Header morale={morale} conduct={conduct} />
-        {/* Red failure overlay across the entire scene */}
-        <div
-          style={{
-            position: "absolute",
-            top: "13%",
-            left: 0,
-            width: "100%",
-            bottom: 0,
-            background: "rgba(80,0,0,0.55)",
-            zIndex: 5,
-          }}
-        />
-        {/* Consequence text box */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: "12%",
-            left: "5%",
-            width: "68%",
-            background: "rgba(0,0,0,0.88)",
-            border: "2px solid #555",
-            padding: "14px 18px",
-            zIndex: 20,
-            fontFamily: "'Share Tech Mono', monospace",
-            fontSize: 14,
-            color: "#ddd",
-            lineHeight: 1.8,
-            textAlign: "center",
-          }}
-        >
-          {gameOverReason}
-        </div>
-        {/* Action buttons at bottom */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            width: "100%",
-            height: "10%",
-            background: "rgba(0,0,0,0.92)",
-            borderTop: "2px solid #2a2a2a",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 28,
-            zIndex: 20,
-          }}
-        >
-          <Btn onClick={restartFromGameOver} color="#d4a017">
-            [A] TENTAR NOVAMENTE
-          </Btn>
-          <Btn
-            onClick={() => {
-              stopTimer()
-              setMorale(60)
-              setConduct(80)
-              setGameState("MENU")
-            }}
-            color="#555"
-          >
-            [S] MENU PRINCIPAL
-          </Btn>
-        </div>
-      </Scene>
-    )
-  }
-
-  // ── WIN ───────────────────────────────────────────────
-  if (gameState === "WIN") {
-    return (
-      <Scene bg={bgFeedbackSuccess}>
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "rgba(0,20,0,0.7)",
-            zIndex: 5,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 24,
-          }}
-        >
-          <div
-            style={{
-              fontFamily: "'Press Start 2P', monospace",
-              fontSize: 28,
-              color: "#39ff14",
-              textShadow: "3px 3px 0 #006600, 0 0 30px #39ff14",
-            }}
-          >
-            TURNO CONCLUÍDO
-          </div>
-          <div
-            style={{
-              background: "rgba(3,12,3,0.97)",
-              border: "2px solid #1a3a1a",
-              boxShadow: "inset 0 0 40px rgba(0,40,0,0.8)",
-              padding: "28px 40px",
-              textAlign: "center",
-            }}
-          >
-            <div style={{ ...G, fontSize: 13, lineHeight: 2.2 }}>
-              RELATÓRIO FINAL DO TURNO
-              <br />
-              ─────────────────────────
-              <br />
-              Moral da Guarnição: {morale}/100
-              <br />
-              Conduta Militar: {conduct}/100
-              <br />
-              Chamadas atendidas: {SCENARIOS.length}/{SCENARIOS.length}
-              <br />
-              ─────────────────────────
-              <br />
-              <span style={{ color: "#fff" }}>STATUS: APROVADO</span>
-            </div>
-          </div>
-          <div
-            style={{
-              fontFamily: "'Share Tech Mono', monospace",
-              fontSize: 14,
-              color: "#888",
-              textAlign: "center",
-              lineHeight: 2,
-            }}
-          >
-            Você sobreviveu ao turno, Operador.
-            <br />A cidade permanece de pé.
-          </div>
-          <Btn
-            onClick={() => {
-              setMorale(60)
-              setConduct(80)
-              setScenarioIdx(0)
-              setGameState("MENU")
-            }}
-            color="#39ff14"
-          >
-            [ MENU PRINCIPAL ]
-          </Btn>
-        </div>
-      </Scene>
-    )
-  }
-
-  return null
-}
+              Localização: <span
