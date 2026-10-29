@@ -1,0 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&family=Share+Tech+Mono&display=swap');
+@import 'tailwindcss';
+
+:root {
+  --gold: #d4a017;
+  --gold-dim: #a07800;
+  --red: #cc2222;
+  --red-bright: #ff3333;
+  --green-monitor: #39ff14;
+  --green-dim: #1a8a00;
+  --bg-dark: #0d0d0d;
+  --bg-panel: #111418;
+  --bg-monitor: #071007;
+  --border-color: #2a2a2a;
+  --text-muted: #888;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg-dark);
+  color: #ddd;
+  font-family: 'Share Tech Mono', monospace;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+.pixel-title {
+  font-family: 'Press Start 2P', monospace;
+  letter-spacing: 0.05em;
+  text-shadow: 3px 3px 0 #000;
+}
+
+.monitor-text {
+  font-family: 'Share Tech Mono', monospace;
+  color: var(--green-monitor);
+  text-shadow: 0 0 8px var(--green-monitor);
+}
+
+.monitor-screen {
+  background: var(--bg-monitor);
+  border: 3px solid #1a3a1a;
+  box-shadow: inset 0 0 30px rgba(0,40,0,0.8), 0 0 15px rgba(57,255,20,0.1);
+}
+
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@keyframes scanline {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100px; }
+}
+
+@keyframes flicker {
+  0%, 95%, 100% { opacity: 1; }
+  96%, 98% { opacity: 0.8; }
+}
+
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 10px rgba(200,0,0,0.5); }
+  50% { box-shadow: 0 0 30px rgba(255,0,0,0.9); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+
+@keyframes phone-ring {
+  0%, 100% { transform: rotate(0deg); }
+  10% { transform: rotate(-8deg); }
+  20% { transform: rotate(8deg); }
+  30% { transform: rotate(-5deg); }
+  40% { transform: rotate(5deg); }
+  50% { transform: rotate(0deg); }
+}
+
+.blink { animation: blink 1s infinite; }
+.phone-ring { animation: phone-ring 0.4s infinite; }
+.flicker { animation: flicker 4s infinite; }
+.shake { animation: shake 0.5s; }
+
+.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.15) 2px,
+    rgba(0,0,0,0.15) 4px
+  );
+  pointer-events: none;
+}
+
+.crt-glow {
+  position: relative;
+}
+
+.stat-bar-fill {
+  transition: width 0.6s ease;
+}
