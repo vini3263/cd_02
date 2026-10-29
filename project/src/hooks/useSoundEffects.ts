@@ -8,124 +8,182 @@ function makeAudio(src: string, volume = 1, loop = false) {
 }
 
 export function useSoundEffects() {
-  // Atmosfera principal usa creepy_ambience conforme sua preferência
-  const bgm          = useRef(makeAudio("/sounds/creepy_ambience.mp3",        0.30, true))
-  const radioStatic  = useRef(makeAudio("/sounds/radio_fundo.mp3",           0.10, true))
-  const evilCue      = useRef(makeAudio("/sounds/background_evil_cue.mp3",   0.35, false))
-  const whisper      = useRef(makeAudio("/sounds/whisper_voices.mp3",         0.22, true))
-  const phoneRing    = useRef(makeAudio("/sounds/telephone_ring.mp3",         0.60, true))
-  const rotaryDial   = useRef(makeAudio("/sounds/rotary_phone_dial.mp3",      0.50))
-  const siren        = useRef(makeAudio("/sounds/siren_approaching.mp3",      0.45))
-  const wrongBuzz    = useRef(makeAudio("/sounds/wrong_buzzer.mp3",           0.50))
-  const scream       = useRef(makeAudio("/sounds/scream.mp3",                 0.60))
-  const horrorScream = useRef(makeAudio("/sounds/universfield-male-horror-scream-08-352438.mp3", 0.55))
-  const winAmbience  = useRef(makeAudio("/sounds/freesound_community-car-passing-and-birds-chirping-in-the-background-94401.mp3", 0.35, true))
+  const bgm          = useRef<HTMLAudioElement | null>(null)
+  const radioStatic  = useRef<HTMLAudioElement | null>(null)
+  const evilCue      = useRef<HTMLAudioElement | null>(null)
+  const whisper      = useRef<HTMLAudioElement | null>(null)
+  const phoneRing    = useRef<HTMLAudioElement | null>(null)
+  const rotaryDial   = useRef<HTMLAudioElement | null>(null)
+  const siren        = useRef<HTMLAudioElement | null>(null)
+  const wrongBuzz    = useRef<HTMLAudioElement | null>(null)
+  const scream       = useRef<HTMLAudioElement | null>(null)
+  const horrorScream = useRef<HTMLAudioElement | null>(null)
+  const winAmbience  = useRef<HTMLAudioElement | null>(null)
 
-  const stopAudio = (audio: HTMLAudioElement) => {
-    audio.pause()
-    audio.currentTime = 0
-  }
+  const timersRef = useRef<number[]>([])
 
-  useEffect(() => {
-    return () => {
-      ;[bgm, radioStatic, evilCue, whisper, phoneRing, rotaryDial, siren, wrongBuzz, scream, horrorScream, winAmbience].forEach(
-        (r) => { r.current.pause(); r.current.src = "" }
-      )
-    }
+  const clearAudioTimers = useCallback(() => {
+    timersRef.current.forEach((id) => window.clearTimeout(id))
+    timersRef.current = []
   }, [])
 
-  // Corta efeitos pontuais para não encavalar entre cenas
+  const stopAudio = useCallback((audio: HTMLAudioElement | null) => {
+    if (!audio) return
+    audio.pause()
+    audio.currentTime = 0
+  }, [])
+
+  useEffect(() => {
+    bgm.current          = makeAudio("/sounds/creepy_ambience.mp3", 0.30, true)
+    radioStatic.current  = makeAudio("/sounds/radio_fundo.mp3", 0.10, true)
+    evilCue.current      = makeAudio("/sounds/background_evil_cue.mp3", 0.35, false)
+    whisper.current      = makeAudio("/sounds/whisper_voices.mp3", 0.22, true)
+    phoneRing.current    = makeAudio("/sounds/telephone_ring.mp3", 0.60, true)
+    rotaryDial.current   = makeAudio("/sounds/rotary_phone_dial.mp3", 0.50, false)
+    siren.current        = makeAudio("/sounds/siren_approaching.mp3", 0.45, false)
+    wrongBuzz.current    = makeAudio("/sounds/wrong_buzzer.mp3", 0.50, false)
+    scream.current       = makeAudio("/sounds/scream.mp3", 0.60, false)
+    horrorScream.current = makeAudio("/sounds/universfield-male-horror-scream-08-352438.mp3", 0.55, false)
+    winAmbience.current  = makeAudio(
+      "/sounds/freesound_community-car-passing-and-birds-chirping-in-the-background-94401.mp3",
+      0.35,
+      true
+    )
+
+    return () => {
+      clearAudioTimers()
+      ;[
+        bgm,
+        radioStatic,
+        evilCue,
+        whisper,
+        phoneRing,
+        rotaryDial,
+        siren,
+        wrongBuzz,
+        scream,
+        horrorScream,
+        winAmbience,
+      ].forEach((r) => stopAudio(r.current))
+    }
+  }, [clearAudioTimers, stopAudio])
+
   const stopAllSFX = useCallback(() => {
+    clearAudioTimers()
     ;[phoneRing, rotaryDial, siren, wrongBuzz, scream, horrorScream, evilCue].forEach((r) =>
       stopAudio(r.current)
     )
-  }, [])
+  }, [clearAudioTimers, stopAudio])
 
   const stopBGM = useCallback(() => {
     ;[bgm, radioStatic, whisper, winAmbience].forEach((r) => stopAudio(r.current))
-  }, [])
+  }, [stopAudio])
 
-  // Liga a BGM (creepy_ambience) + rádio estático no turno
   const playBGM = useCallback(() => {
     stopAudio(winAmbience.current)
     stopAudio(evilCue.current)
-    if (bgm.current.paused) {
+    if (bgm.current && bgm.current.paused) {
       bgm.current.play().catch(() => {})
     }
-    if (radioStatic.current.paused) {
+    if (radioStatic.current && radioStatic.current.paused) {
       radioStatic.current.play().catch(() => {})
     }
-  }, [])
+  }, [stopAudio])
 
-  // Telefone tocando (INCOMING)
   const playPhoneRing = useCallback(() => {
     stopAudio(siren.current)
     stopAudio(rotaryDial.current)
-    phoneRing.current.currentTime = 0
-    phoneRing.current.play().catch(() => {})
-  }, [])
-
-  // Para o toque do telefone (com opção de tocar o clique ao atender)
-  const stopPhoneRing = useCallback((withClick = true) => {
-    stopAudio(phoneRing.current)
-    if (withClick) {
-      rotaryDial.current.currentTime = 0
-      rotaryDial.current.play().catch(() => {})
-      setTimeout(() => rotaryDial.current.pause(), 700)
+    if (phoneRing.current) {
+      phoneRing.current.currentTime = 0
+      phoneRing.current.play().catch(() => {})
     }
-  }, [])
+  }, [stopAudio])
 
-  // Som curto de confirmação/transferência (Código 1, Trote, ou transferência 190/192/153)
+  const stopPhoneRing = useCallback(
+    (withClick = true) => {
+      stopAudio(phoneRing.current)
+      if (withClick && rotaryDial.current) {
+        rotaryDial.current.currentTime = 0
+        rotaryDial.current.play().catch(() => {})
+        const id = window.setTimeout(() => {
+          if (rotaryDial.current) rotaryDial.current.pause()
+        }, 700)
+        timersRef.current.push(id)
+      }
+    },
+    [stopAudio]
+  )
+
   const playConfirmTransfer = useCallback(() => {
     stopAudio(phoneRing.current)
-    rotaryDial.current.currentTime = 0
-    rotaryDial.current.play().catch(() => {})
-    setTimeout(() => rotaryDial.current.pause(), 900)
-  }, [])
+    if (rotaryDial.current) {
+      rotaryDial.current.currentTime = 0
+      rotaryDial.current.play().catch(() => {})
+      const id = window.setTimeout(() => {
+        if (rotaryDial.current) rotaryDial.current.pause()
+      }, 900)
+      timersRef.current.push(id)
+    }
+  }, [stopAudio])
 
-  // Sirene ao despachar emergência (Código 2 ou acionamento crítico)
   const playDispatchCode2 = useCallback(() => {
     stopAudio(phoneRing.current)
-    siren.current.currentTime = 0
-    siren.current.play().catch(() => {})
-    setTimeout(() => siren.current.pause(), 4000)
-  }, [])
+    if (siren.current) {
+      siren.current.currentTime = 0
+      siren.current.play().catch(() => {})
+      const id = window.setTimeout(() => {
+        if (siren.current) siren.current.pause()
+      }, 4000)
+      timersRef.current.push(id)
+    }
+  }, [stopAudio])
 
-  // Buzzer de erro
   const playError = useCallback(() => {
-    wrongBuzz.current.currentTime = 0
-    wrongBuzz.current.play().catch(() => {})
-  }, [])
+    stopAudio(phoneRing.current)
+    if (wrongBuzz.current) {
+      wrongBuzz.current.currentTime = 0
+      wrongBuzz.current.play().catch(() => {})
+    }
+  }, [stopAudio])
 
-  // Game Over — corta BGM, toca impacto sombrio + gritos
   const playGameOver = useCallback(() => {
     stopBGM()
     stopAllSFX()
-    evilCue.current.currentTime = 0
-    evilCue.current.play().catch(() => {})
-    scream.current.currentTime = 0
-    scream.current.play().catch(() => {})
-    setTimeout(() => horrorScream.current.play().catch(() => {}), 900)
+    if (evilCue.current) {
+      evilCue.current.currentTime = 0
+      evilCue.current.play().catch(() => {})
+    }
+    if (scream.current) {
+      scream.current.currentTime = 0
+      scream.current.play().catch(() => {})
+    }
+    const id = window.setTimeout(() => {
+      if (horrorScream.current) {
+        horrorScream.current.currentTime = 0
+        horrorScream.current.play().catch(() => {})
+      }
+    }, 900)
+    timersRef.current.push(id)
   }, [stopBGM, stopAllSFX])
 
-  // Vitória — corta tensão e toca som de manhã tranquila
   const playWin = useCallback(() => {
     stopBGM()
     stopAllSFX()
-    winAmbience.current.currentTime = 0
-    winAmbience.current.play().catch(() => {})
+    if (winAmbience.current) {
+      winAmbience.current.currentTime = 0
+      winAmbience.current.play().catch(() => {})
+    }
   }, [stopBGM, stopAllSFX])
 
-  // Whispers quando moral < 40
   const startLowMoraleAmbience = useCallback(() => {
-    if (!whisper.current.paused) return
+    if (!whisper.current || !whisper.current.paused) return
     whisper.current.currentTime = 0
     whisper.current.play().catch(() => {})
   }, [])
 
   const stopLowMoraleAmbience = useCallback(() => {
     stopAudio(whisper.current)
-  }, [])
+  }, [stopAudio])
 
   return {
     playBGM,
