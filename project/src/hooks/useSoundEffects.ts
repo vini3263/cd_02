@@ -1,102 +1,171 @@
-import { useRef, useEffect, useCallback } from "react"
-
-function makeAudio(src: string, volume = 1, loop = false) {
-  const a = new Audio(src)
-  a.volume = volume
-  a.loop = loop
-  return a
-}
+import { useRef, useEffect, useCallback } from 'react';
 
 export function useSoundEffects() {
-  const bgm        = useRef(makeAudio("/sounds/background_evil_cue.mp3",   0.25, true))
-  const radioStatic= useRef(makeAudio("/sounds/radio_fundo.mp3",           0.08, true))
-  const creepy     = useRef(makeAudio("/sounds/creepy_ambience.mp3",        0.15, true))
-  const whisper    = useRef(makeAudio("/sounds/whisper_voices.mp3",         0.20, true))
-  const phoneRing  = useRef(makeAudio("/sounds/telephone_ring.mp3",         0.70, true))
-  const rotaryDial = useRef(makeAudio("/sounds/rotary_phone_dial.mp3",      0.60))
-  const siren      = useRef(makeAudio("/sounds/siren_approaching.mp3",      0.55))
-  const wrongBuzz  = useRef(makeAudio("/sounds/wrong_buzzer.mp3",           0.60))
-  const scream     = useRef(makeAudio("/sounds/scream.mp3",                 0.70))
-  const horrorScream = useRef(makeAudio("/sounds/universfield-male-horror-scream-08-352438.mp3", 0.65))
-  const ambience   = useRef(makeAudio("/sounds/freesound_community-car-passing-and-birds-chirping-in-the-background-94401.mp3", 0.12, true))
+  const ambience = useRef<HTMLAudioElement | null>(null);
+  const radioBg = useRef<HTMLAudioElement | null>(null);
+  const phoneRing = useRef<HTMLAudioElement | null>(null);
+  const phoneDial = useRef<HTMLAudioElement | null>(null);
+  const siren = useRef<HTMLAudioElement | null>(null);
+  const wrongBuzzer = useRef<HTMLAudioElement | null>(null);
+  const gameOverCue = useRef<HTMLAudioElement | null>(null);
+  const winMorning = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    ambience.current = new Audio('/sounds/creepy_ambience.mp3');
+    ambience.current.loop = true;
+    ambience.current.volume = 0.25;
+
+    radioBg.current = new Audio('/sounds/radio_fundo.mp3');
+    radioBg.current.loop = true;
+    radioBg.current.volume = 0.12;
+
+    phoneRing.current = new Audio('/sounds/telephone_ring.mp3');
+    phoneRing.current.loop = true;
+    phoneRing.current.volume = 0.55;
+
+    phoneDial.current = new Audio('/sounds/rotary_phone_dial.mp3');
+    phoneDial.current.volume = 0.45;
+
+    siren.current = new Audio('/sounds/siren_approaching.mp3');
+    siren.current.volume = 0.4;
+
+    wrongBuzzer.current = new Audio('/sounds/wrong_buzzer.mp3');
+    wrongBuzzer.current.volume = 0.45;
+
+    gameOverCue.current = new Audio('/sounds/background_evil_cue.mp3');
+    gameOverCue.current.volume = 0.6;
+
+    winMorning.current = new Audio(
+      '/sounds/freesound_community-car-passing-and-birds-chirping-in-the-background-94401.mp3'
+    );
+    winMorning.current.volume = 0.4;
+
     return () => {
-      ;[bgm, radioStatic, creepy, whisper, phoneRing, siren, wrongBuzz, scream, horrorScream, ambience].forEach(
-        (r) => { r.current.pause(); r.current.src = "" }
-      )
-    }
-  }, [])
+      [
+        ambience,
+        radioBg,
+        phoneRing,
+        phoneDial,
+        siren,
+        wrongBuzzer,
+        gameOverCue,
+        winMorning,
+      ].forEach((ref) => {
+        if (ref.current) {
+          ref.current.pause();
+          ref.current.currentTime = 0;
+        }
+      });
+    };
+  }, []);
 
-  const stopAll = useCallback((...refs: React.RefObject<HTMLAudioElement>[]) => {
-    refs.forEach(r => { r.current.pause(); r.current.currentTime = 0 })
-  }, [])
+  const safePlay = (audio: HTMLAudioElement | null) => {
+    if (!audio) return;
+    audio.play().catch(() => {
+      // Ignora bloqueio de autoplay caso ainda não tenha havido clique
+    });
+  };
 
-  // Liga a BGM + rádio estático (ao iniciar briefing/restart)
+  const stopAudio = (audio: HTMLAudioElement | null) => {
+    if (!audio) return;
+    audio.pause();
+    audio.currentTime = 0;
+  };
+
+  // Para todos os efeitos pontuais (evita som vazando de uma cena para outra)
+  const stopAllSFX = useCallback(() => {
+    stopAudio(phoneRing.current);
+    stopAudio(phoneDial.current);
+    stopAudio(siren.current);
+    stopAudio(wrongBuzzer.current);
+  }, []);
+
+  // Inicia o som ambiente do turno
   const playBGM = useCallback(() => {
-    bgm.current.currentTime = 0
-    bgm.current.play().catch(() => {})
-    setTimeout(() => radioStatic.current.play().catch(() => {}), 800)
-    ambience.current.play().catch(() => {})
-  }, [])
+    stopAudio(gameOverCue.current);
+    stopAudio(winMorning.current);
+    if (ambience.current && ambience.current.paused) {
+      safePlay(ambience.current);
+    }
+    if (radioBg.current && radioBg.current.paused) {
+      safePlay(radioBg.current);
+    }
+  }, []);
 
-  // Telefone tocando (INCOMING)
+  const stopBGM = useCallback(() => {
+    stopAudio(ambience.current);
+    stopAudio(radioBg.current);
+  }, []);
+
   const playPhoneRing = useCallback(() => {
-    phoneRing.current.currentTime = 0
-    phoneRing.current.play().catch(() => {})
-  }, [])
+    stopAllSFX();
+    safePlay(phoneRing.current);
+  }, [stopAllSFX]);
 
   const stopPhoneRing = useCallback(() => {
-    phoneRing.current.pause()
-    phoneRing.current.currentTime = 0
-    // toca o discador rotativo ao atender
-    rotaryDial.current.currentTime = 0
-    rotaryDial.current.play().catch(() => {})
-  }, [])
+    stopAudio(phoneRing.current);
+  }, []);
 
-  // Sirene ao despachar Código 2 correto
+  // Toca um clique/discagem rápida ao atender ou confirmar ação
+  const playPhoneClick = useCallback(() => {
+    stopAudio(phoneRing.current);
+    if (phoneDial.current) {
+      phoneDial.current.currentTime = 0;
+      safePlay(phoneDial.current);
+      setTimeout(() => {
+        if (phoneDial.current) phoneDial.current.pause();
+      }, 650);
+    }
+  }, []);
+
   const playDispatchCode2 = useCallback(() => {
-    siren.current.currentTime = 0
-    siren.current.play().catch(() => {})
-  }, [])
+    stopAudio(phoneRing.current);
+    if (siren.current) {
+      siren.current.currentTime = 0;
+      safePlay(siren.current);
+      // Corta a sirene após 3.5s para não poluir a leitura do relatório
+      setTimeout(() => {
+        if (siren.current) siren.current.pause();
+      }, 3500);
+    }
+  }, []);
 
-  // Buzzer de erro
   const playError = useCallback(() => {
-    wrongBuzz.current.currentTime = 0
-    wrongBuzz.current.play().catch(() => {})
-  }, [])
+    stopAudio(phoneRing.current);
+    if (wrongBuzzer.current) {
+      wrongBuzzer.current.currentTime = 0;
+      safePlay(wrongBuzzer.current);
+    }
+  }, []);
 
-  // Game Over — para BGM, toca grito
   const playGameOver = useCallback(() => {
-    bgm.current.pause()
-    radioStatic.current.pause()
-    ambience.current.pause()
-    scream.current.currentTime = 0
-    scream.current.play().catch(() => {})
-    setTimeout(() => horrorScream.current.play().catch(() => {}), 1200)
-    setTimeout(() => creepy.current.play().catch(() => {}), 2000)
-  }, [])
+    stopBGM();
+    stopAllSFX();
+    if (gameOverCue.current) {
+      gameOverCue.current.currentTime = 0;
+      safePlay(gameOverCue.current);
+    }
+  }, [stopBGM, stopAllSFX]);
 
-  // Toca whispers quando moral < 40 (chamado do componente)
-  const startLowMoraleAmbience = useCallback(() => {
-    if (!whisper.current.paused) return
-    whisper.current.currentTime = 0
-    whisper.current.play().catch(() => {})
-  }, [])
-
-  const stopLowMoraleAmbience = useCallback(() => {
-    whisper.current.pause()
-    whisper.current.currentTime = 0
-  }, [])
+  const playWin = useCallback(() => {
+    stopBGM();
+    stopAllSFX();
+    if (winMorning.current) {
+      winMorning.current.currentTime = 0;
+      safePlay(winMorning.current);
+    }
+  }, [stopBGM, stopAllSFX]);
 
   return {
     playBGM,
+    stopBGM,
     playPhoneRing,
     stopPhoneRing,
+    playPhoneClick,
     playDispatchCode2,
     playError,
     playGameOver,
-    startLowMoraleAmbience,
-    stopLowMoraleAmbience,
-  }
+    playWin,
+    stopAllSFX,
+  };
 }
