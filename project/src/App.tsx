@@ -635,7 +635,20 @@ function Scene({ bg, children }: { bg: string; children: React.ReactNode }) {
 
 // ─────────────────────────────────────────────────────
 export default function App() {
-  const { playBGM, playPhoneRing, stopPhoneRing, playDispatchCode2, playError, playGameOver, startLowMoraleAmbience, stopLowMoraleAmbience } = useSoundEffects()
+  const {
+    playBGM,
+    stopBGM,
+    stopAllSFX,
+    playPhoneRing,
+    stopPhoneRing,
+    playConfirmTransfer,
+    playDispatchCode2,
+    playError,
+    playGameOver,
+    playWin,
+    startLowMoraleAmbience,
+    stopLowMoraleAmbience,
+  } = useSoundEffects()
   
   const [gameState, setGameState] = useState<GameState>("MENU")
   const [morale, setMorale] = useState(60)
@@ -705,27 +718,8 @@ export default function App() {
 
   const processDecision = useCallback(
     (decision: Decision) => {
-      const s = SCENARIOS[scenarioIdx]
-      const chosenUnits = (["ABTR", "SIATE"] as FireUnit[]).filter(
-        (unit) => selectedUnits[unit],
-      )
-
-      if (decision === "FIRE" && chosenUnits.length === 0) {
-        setDispatchAlert("SELECIONE AO MENOS UMA VIATURA DO 193")
-        playError()
-        return
-      }
-
-      const unavailableUnit = chosenUnits.find(
-        (unit) => fleet[unit].total - fleet[unit].returnAfter.length <= 0,
-      )
-      if (decision === "FIRE" && unavailableUnit) {
-        setDispatchAlert(`SEM VIATURA ${unavailableUnit} DISPONÍVEL`)
-        playError()
-        return
-      }
-
       stopTimer()
+      stopPhoneRing(false)
       setDispatchAlert("")
 
       const requiredUnits = s.requiredUnits ?? []
@@ -737,29 +731,6 @@ export default function App() {
         (decision !== "FIRE" ||
           (hasCorrectUnits && selectedCode === s.requiredCode))
       setIsCorrectDecision(correct)
-
-      if (!correct) {
-        playError()
-      } else if (decision === "FIRE" && selectedCode === 2) {
-        playDispatchCode2()
-      }
-
-      const nextCallsCompleted = callsCompleted + 1
-      setCallsCompleted(nextCallsCompleted)
-      setFleet((currentFleet) => {
-        const nextFleet = createInitialFleet()
-        ;(["ABTR", "SIATE"] as FireUnit[]).forEach((unit) => {
-          const newlyEmployed =
-            decision === "FIRE" && chosenUnits.includes(unit)
-              ? [callsCompleted + 2]
-              : []
-          nextFleet[unit].returnAfter = [
-            ...currentFleet[unit].returnAfter,
-            ...newlyEmployed,
-          ].filter((returnAfter) => returnAfter > nextCallsCompleted)
-        })
-        return nextFleet
-      })
 
       const newMorale = Math.min(
         100,
@@ -778,7 +749,24 @@ export default function App() {
       setFeedbackText(correct ? s.feedback.correct : s.feedback.wrong)
       setMorale(newMorale)
       setConduct(newConduct)
-      if (!checkGameOver(newMorale, newConduct)) setGameState("FEEDBACK")
+
+      // Só toca efeito de decisão se não tiver engatilhado Game Over imediato
+      if (!checkGameOver(newMorale, newConduct)) {
+        if (!correct) {
+          playError()
+        } else if (
+          (decision === "FIRE" && selectedCode === 2) ||
+          decision === "SAMU" ||
+          decision === "PM"
+        ) {
+          // Toca sirene para Código 2 do 193 e para emergências críticas de SAMU/PM
+          playDispatchCode2()
+        } else {
+          // Toca som de discagem/transferência para Código 1, GM (153) e Trote negado
+          playConfirmTransfer()
+        }
+        setGameState("FEEDBACK")
+      }
     },
     [
       scenarioIdx,
@@ -796,8 +784,10 @@ export default function App() {
   )
 
   const goNextScenario = useCallback(() => {
+    stopAllSFX()
     const next = scenarioIdx + 1
     if (next >= SCENARIOS.length) {
+      playWin()
       setGameState("WIN")
       return
     }
@@ -808,10 +798,11 @@ export default function App() {
     setGameState("INCOMING")
     playPhoneRing()
     startCountdown(25, () => {
+      stopPhoneRing(false)
       setGameState("ACTIVE")
       startCountdown(getDecisionTime(next), () => processDecision("DENY"))
     })
-  }, [scenarioIdx, startCountdown, processDecision, playPhoneRing])
+  }, [scenarioIdx, startCountdown, processDecision, playPhoneRing, stopPhoneRing, stopAllSFX, playWin])
 
   const answerCall = useCallback(() => {
     stopTimer()
