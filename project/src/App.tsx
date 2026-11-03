@@ -1,15 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useSoundEffects } from "./hooks/useSoundEffects"
 
-type GameState =
-  | "MENU"
-  | "INSTRUCTIONS"
-  | "BRIEFING"
-  | "INCOMING"
-  | "ACTIVE"
-  | "FEEDBACK"
-  | "GAME_OVER"
-  | "WIN"
+import bgIncoming from "./assets/scene-incoming.jpg"
+import bgActive from "./assets/scene-active.jpg"
+import bgActiveStressed from "./assets/scene-active-stressed.jpg"
+import bgBriefing from "./assets/scene-briefing.jpg"
+import bgFeedbackSuccess from "./assets/scene-feedback-success.jpg"
+import bgGameOver from "./assets/scene-gameover.jpg"
+
+type GameState = "MENU" | "INSTRUCTIONS" | "BRIEFING" | "INCOMING" | "ACTIVE" | "FEEDBACK" | "GAME_OVER" | "WIN"
 type Decision = "FIRE" | "SAMU" | "PM" | "GM" | "DENY"
 type FireUnit = "ABTR" | "SIATE"
 
@@ -55,17 +54,14 @@ const SCENARIOS: Scenario[] = [
     moraleEffect: { correct: 5, wrong: -20 },
     conductEffect: { correct: 5, wrong: -30 },
     feedback: {
-      correct:
-        "Guarnição chegou em 4 minutos. Vítima resgatada com sucesso antes da ignição total. Incêndio controlado. Excelente julgamento.",
-      wrong:
-        "Chegada em Código 1 demorou 22 minutos. O veículo explodiu. Vítima em estado crítico. Falha grave registrada no prontuário.",
+      correct: "Guarnição chegou em 4 minutos. Vítima resgatada com sucesso antes da ignição total. Incêndio controlado. Excelente julgamento.",
+      wrong: "Chegada em Código 1 demorou 22 minutos. O veículo explodiu. Vítima em estado crítico. Falha grave registrada no prontuário.",
     },
   },
   {
     id: 2,
     callerVoice: "Voz de Mulher",
-    incomingSnippet:
-      '"Socorro! Fogo no restaurante da Av. Colombo! Tem muita fumaça!"',
+    incomingSnippet: '"Socorro! Fogo no restaurante da Av. Colombo! Tem muita fumaça!"',
     location: "Av. Colombo, 123 – Maringá",
     nature: "Incêndio Estrutural – Restaurante",
     victims: "Confirmar – possíveis clientes no interior",
@@ -77,10 +73,8 @@ const SCENARIOS: Scenario[] = [
     moraleEffect: { correct: 5, wrong: -25 },
     conductEffect: { correct: 5, wrong: -35 },
     feedback: {
-      correct:
-        "Equipe chegou em tempo crítico. Incêndio controlado. Todos os clientes evacuados. Dano mínimo à estrutura.",
-      wrong:
-        "O restaurante na Av. Colombo foi reduzido a cinzas. A ajuda chegou tarde demais. Todos os pedidos foram perdidos. Conduta questionada.",
+      correct: "Equipe chegou em tempo crítico. Incêndio controlado. Todos os clientes evacuados. Dano mínimo à estrutura.",
+      wrong: "O restaurante na Av. Colombo foi reduzido a cinzas. A ajuda chegou tarde demais. Todos os pedidos foram perdidos. Conduta questionada.",
     },
   },
   {
@@ -96,10 +90,8 @@ const SCENARIOS: Scenario[] = [
     moraleEffect: { correct: 5, wrong: -15 },
     conductEffect: { correct: 5, wrong: -20 },
     feedback: {
-      correct:
-        "Trote identificado. Registro feito para rastreamento judicial. Guarnição preservada para ocorrências reais.",
-      wrong:
-        "Viatura despachada sem localização. 40 minutos perdidos. Ocorrência real aconteceu na mesma janela sem cobertura.",
+      correct: "Trote identificado. Registro feito para rastreamento judicial. Guarnição preservada para ocorrências reais.",
+      wrong: "Viatura despachada sem localização. 40 minutos perdidos. Ocorrência real aconteceu na mesma janela sem cobertura.",
     },
   },
   {
@@ -117,17 +109,14 @@ const SCENARIOS: Scenario[] = [
     moraleEffect: { correct: 5, wrong: -15 },
     conductEffect: { correct: 5, wrong: -15 },
     feedback: {
-      correct:
-        "Guarnição chegou em Código 1, sem alarde. Era fumaça de churrasco no quintal. Vizinhança tranquilizada.",
-      wrong:
-        "Código 2 para churrasco de domingo. Sirene perturbou o bairro. Guarnição irritada. Moral em queda.",
+      correct: "Guarnição chegou em Código 1, sem alarde. Era fumaça de churrasco no quintal. Vizinhança tranquilizada.",
+      wrong: "Código 2 para churrasco de domingo. Sirene perturbou o bairro. Guarnição irritada. Moral em queda.",
     },
   },
   {
     id: 5,
     callerVoice: "Voz Modificada / Distorcida",
-    incomingSnippet:
-      '"Grande incêndio na Refinaria do Sul! Vai explodir tudo!"',
+    incomingSnippet: '"Grande incêndio na Refinaria do Sul! Vai explodir tudo!"',
     location: '"Refinaria do Sul" – endereço não localizado no mapa',
     nature: "Suspeita de Trote Elaborado",
     victims: "Não confirmadas",
@@ -137,10 +126,8 @@ const SCENARIOS: Scenario[] = [
     moraleEffect: { correct: 5, wrong: -20 },
     conductEffect: { correct: 5, wrong: -25 },
     feedback: {
-      correct:
-        'Trote sofisticado neutralizado. A "Refinaria do Sul" não existe nos mapas. Três viaturas preservadas.',
-      wrong:
-        "Três viaturas enviadas para endereço inexistente. Sistema colapsou. Incêndio real no Jardim Alvorada sem cobertura por 1 hora.",
+      correct: 'Trote sofisticado neutralizado. A "Refinaria do Sul" não existe nos mapas. Três viaturas preservadas.',
+      wrong: "Três viaturas enviadas para endereço inexistente. Sistema colapsou. Incêndio real no Jardim Alvorada sem cobertura por 1 hora.",
     },
   },
   {
@@ -156,10 +143,8 @@ const SCENARIOS: Scenario[] = [
     moraleEffect: { correct: 5, wrong: -20 },
     conductEffect: { correct: 5, wrong: -30 },
     feedback: {
-      correct:
-        "SAMU e guarnição chegaram em 6 minutos. Paciente estabilizado. Era infarto fulminante – cada minuto era vital.",
-      wrong:
-        "Resposta lenta para emergência médica crítica. Paciente evoluiu a óbito antes da chegada da equipe. Conduta gravemente comprometida.",
+      correct: "SAMU e guarnição chegaram em 6 minutos. Paciente estabilizado. Era infarto fulminante – cada minuto era vital.",
+      wrong: "Resposta lenta para emergência médica crítica. Paciente evoluiu a óbito antes da chegada da equipe. Conduta gravemente comprometida.",
     },
   },
   {
@@ -177,10 +162,8 @@ const SCENARIOS: Scenario[] = [
     moraleEffect: { correct: 5, wrong: -15 },
     conductEffect: { correct: 5, wrong: -20 },
     feedback: {
-      correct:
-        "Ambulância SIATE chegou rapidamente, imobilizou a vítima e realizou o transporte ao hospital.",
-      wrong:
-        "Recurso inadequado acionado. A vítima aguardou atendimento especializado e apresentou piora do quadro.",
+      correct: "Ambulância SIATE chegou rapidamente, imobilizou a vítima e realizou o transporte ao hospital.",
+      wrong: "Recurso inadequado acionado. A vítima aguardou atendimento especializado e apresentou piora do quadro.",
     },
   },
   {
@@ -196,10 +179,8 @@ const SCENARIOS: Scenario[] = [
     moraleEffect: { correct: 5, wrong: -15 },
     conductEffect: { correct: 5, wrong: -20 },
     feedback: {
-      correct:
-        "Guarda Municipal chegou ao local, conteve o vandalismo e preservou o patrimônio público.",
-      wrong:
-        "O órgão incorreto foi acionado. Os autores deixaram o local antes da chegada do apoio adequado.",
+      correct: "Guarda Municipal chegou ao local, conteve o vandalismo e preservou o patrimônio público.",
+      wrong: "O órgão incorreto foi acionado. Os autores deixaram o local antes da chegada do apoio adequado.",
     },
   },
   {
@@ -215,10 +196,8 @@ const SCENARIOS: Scenario[] = [
     moraleEffect: { correct: 5, wrong: -20 },
     conductEffect: { correct: 5, wrong: -25 },
     feedback: {
-      correct:
-        "Polícia Militar chegou, conteve os envolvidos e apreendeu o objeto usado na ameaça.",
-      wrong:
-        "A ocorrência policial foi encaminhada ao órgão errado. A agressão continuou e deixou feridos.",
+      correct: "Polícia Militar chegou, conteve os envolvidos e apreendeu o objeto usado na ameaça.",
+      wrong: "A ocorrência policial foi encaminhada ao órgão errado. A agressão continuou e deixou feridos.",
     },
   },
 ]
@@ -254,35 +233,23 @@ Boa sorte. Você vai precisar.
 
 [ ENTER / CLIQUE PARA INICIAR O TURNO ]`
 
-import bgIncoming from "./assets/scene-incoming.jpg"
-import bgActive from "./assets/scene-active.jpg"
-import bgActiveStressed from "./assets/scene-active-stressed.jpg"
-import bgBriefing from "./assets/scene-briefing.jpg"
-import bgFeedbackSuccess from "./assets/scene-feedback-success.jpg"
-import bgGameOver from "./assets/scene-gameover.jpg"
-
 const createInitialFleet = (): FleetStatus => ({
   ABTR: { total: 2, returnAfter: [] },
   SIATE: { total: 2, returnAfter: [] },
 })
 
-const getDecisionTime = (scenarioIndex: number) =>
-  Math.max(20, 45 - scenarioIndex * 3)
+const getDecisionTime = (scenarioIndex: number) => Math.max(20, 45 - scenarioIndex * 3)
+
+const G = { color: "#39ff14", fontFamily: "'Share Tech Mono', monospace", textShadow: "0 0 6px #39ff14", fontSize: 12 }
+const GOLD = { color: "#d4a017", fontFamily: "'Share Tech Mono', monospace", fontSize: 12 }
+const WHITE = { color: "#fff", fontFamily: "'Share Tech Mono', monospace", fontSize: 12 }
 
 function StatBar({ label, value }: { label: string; value: number }) {
   const isDanger = value <= 30
   const barColor = value <= 0 ? "#ff0000" : isDanger ? "#cc2222" : "#d4a017"
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-      <span
-        style={{
-          fontFamily: "'Press Start 2P', monospace",
-          fontSize: 9,
-          color: "#ddd",
-          textShadow: "1px 1px 0 #000",
-          letterSpacing: 1,
-        }}
-      >
+      <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 9, color: "#ddd", textShadow: "1px 1px 0 #000", letterSpacing: 1 }}>
         {label}
       </span>
       <div
@@ -295,14 +262,7 @@ function StatBar({ label, value }: { label: string; value: number }) {
           boxShadow: isDanger ? "0 0 8px rgba(200,0,0,0.5)" : "none",
         }}
       >
-        <div
-          style={{
-            width: `${value}%`,
-            height: "100%",
-            background: `linear-gradient(90deg, ${barColor}88, ${barColor})`,
-            transition: "width 0.5s",
-          }}
-        />
+        <div style={{ width: `${value}%`, height: "100%", background: `linear-gradient(90deg, ${barColor}88, ${barColor})`, transition: "width 0.5s" }} />
         <span
           style={{
             position: "absolute",
@@ -319,71 +279,25 @@ function StatBar({ label, value }: { label: string; value: number }) {
           {value} / 100
         </span>
       </div>
-      {value <= 0 && (
-        <span
-          style={{
-            fontFamily: "'Press Start 2P', monospace",
-            fontSize: 9,
-            color: "#ff3333",
-            animation: "blink 0.8s infinite",
-          }}
-        >
-          FALHA
-        </span>
-      )}
+      {value <= 0 && <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 9, color: "#ff3333", animation: "blink 0.8s infinite" }}>FALHA</span>}
     </div>
   )
 }
 
 function FleetPanel({ fleet }: { fleet: FleetStatus }) {
   return (
-    <div
-      style={{
-        border: "1px solid #405040",
-        background: "rgba(0, 8, 0, 0.9)",
-        padding: "6px 8px",
-        fontFamily: "'Share Tech Mono', monospace",
-        fontSize: 10,
-        lineHeight: 1.45,
-      }}
-    >
-      <div
-        style={{
-          color: "#d4a017",
-          fontFamily: "'Press Start 2P', monospace",
-          fontSize: 7,
-          marginBottom: 5,
-          letterSpacing: 1,
-        }}
-      >
+    <div style={{ border: "1px solid #405040", background: "rgba(0, 8, 0, 0.9)", padding: "6px 8px", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, lineHeight: 1.45 }}>
+      <div style={{ color: "#d4a017", fontFamily: "'Press Start 2P', monospace", fontSize: 7, marginBottom: 5, letterSpacing: 1 }}>
         FROTA 193 — CORPO DE BOMBEIROS
       </div>
       {(["ABTR", "SIATE"] as FireUnit[]).map((unit) => {
         const employed = fleet[unit].returnAfter.length
         const available = fleet[unit].total - employed
         return (
-          <div
-            key={unit}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "42px 1fr 1fr",
-              gap: 5,
-            }}
-          >
+          <div key={unit} style={{ display: "grid", gridTemplateColumns: "42px 1fr 1fr", gap: 5 }}>
             <strong style={{ color: "#fff" }}>{unit}</strong>
             <span style={{ color: "#39ff14" }}>DISPONÍVEIS: {available}</span>
-            <span
-              style={{
-                color:
-                  available === 0
-                    ? "#ff3333"
-                    : employed
-                      ? "#d4a017"
-                      : "#657565",
-              }}
-            >
-              EMPREGADAS: {employed}
-            </span>
+            <span style={{ color: available === 0 ? "#ff3333" : employed ? "#d4a017" : "#657565" }}>EMPREGADAS: {employed}</span>
           </div>
         )
       })}
@@ -400,8 +314,7 @@ function Header({ morale, conduct }: { morale: number; conduct: number }) {
         left: 0,
         right: 0,
         height: "13%",
-        background:
-          "linear-gradient(180deg, rgba(10,8,0,0.97) 0%, rgba(10,8,0,0.93) 100%)",
+        background: "linear-gradient(180deg, rgba(10,8,0,0.97) 0%, rgba(10,8,0,0.93) 100%)",
         borderBottom: "3px solid #5a4200",
         display: "flex",
         alignItems: "center",
@@ -411,16 +324,7 @@ function Header({ morale, conduct }: { morale: number; conduct: number }) {
       }}
     >
       <StatBar label="MORAL DA GUARNIÇÃO" value={morale} />
-      <div
-        style={{
-          fontFamily: "'Press Start 2P', monospace",
-          fontSize: 13,
-          color: "#d4a017",
-          textAlign: "center",
-          textShadow: "2px 2px 0 #000",
-          lineHeight: 1.7,
-        }}
-      >
+      <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 13, color: "#d4a017", textAlign: "center", textShadow: "2px 2px 0 #000", lineHeight: 1.7 }}>
         CÓDIGO 2: <span style={{ color: "#fff" }}>DESPACHO DE EMERGÊNCIA</span>
       </div>
       <StatBar label="CONDUTA MILITAR" value={conduct} />
@@ -439,8 +343,7 @@ function Monitor({ children }: { children: React.ReactNode }) {
         bottom: "17%",
         background: "rgba(3, 12, 3, 0.93)",
         border: "2px solid #1a3a1a",
-        boxShadow:
-          "inset 0 0 30px rgba(0,40,0,0.7), 0 0 12px rgba(57,255,20,0.08)",
+        boxShadow: "inset 0 0 30px rgba(0,40,0,0.7), 0 0 12px rgba(57,255,20,0.08)",
         padding: "10px 12px",
         zIndex: 10,
         overflow: "hidden",
@@ -453,24 +356,12 @@ function Monitor({ children }: { children: React.ReactNode }) {
         style={{
           position: "absolute",
           inset: 0,
-          backgroundImage:
-            "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 4px)",
+          backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 4px)",
           pointerEvents: "none",
           zIndex: 1,
         }}
       />
-      <div
-        style={{
-          position: "relative",
-          zIndex: 2,
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          gap: 8,
-        }}
-      >
-        {children}
-      </div>
+      <div style={{ position: "relative", zIndex: 2, flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>{children}</div>
     </div>
   )
 }
@@ -505,48 +396,15 @@ function TimerBar({ value, max }: { value: number; max: number }) {
   const color = pct > 60 ? "#39ff14" : pct > 30 ? "#d4a017" : "#ff3333"
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <span
-        style={{
-          color,
-          fontFamily: "'Share Tech Mono', monospace",
-          fontSize: 12,
-          minWidth: 65,
-          textShadow: `0 0 6px ${color}`,
-        }}
-      >
-        {value}s
-      </span>
-      <div
-        style={{
-          flex: 1,
-          height: 6,
-          background: "#071007",
-          border: "1px solid #1a3a1a",
-        }}
-      >
-        <div
-          style={{
-            width: `${pct}%`,
-            height: "100%",
-            background: color,
-            boxShadow: `0 0 5px ${color}`,
-            transition: "width 1s linear",
-          }}
-        />
+      <span style={{ color, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, minWidth: 65, textShadow: `0 0 6px ${color}` }}>{value}s</span>
+      <div style={{ flex: 1, height: 6, background: "#071007", border: "1px solid #1a3a1a" }}>
+        <div style={{ width: `${pct}%`, height: "100%", background: color, boxShadow: `0 0 5px ${color}`, transition: "width 1s linear" }} />
       </div>
     </div>
   )
 }
 
-function Btn({
-  onClick,
-  color = "#39ff14",
-  children,
-}: {
-  onClick: () => void
-  color?: string
-  children: React.ReactNode
-}) {
+function Btn({ onClick, color = "#39ff14", children }: { onClick: () => void; color?: string; children: React.ReactNode }) {
   return (
     <button
       onClick={onClick}
@@ -575,47 +433,10 @@ function Btn({
   )
 }
 
-const G = {
-  color: "#39ff14",
-  fontFamily: "'Share Tech Mono', monospace",
-  textShadow: "0 0 6px #39ff14",
-  fontSize: 12,
-}
-
-const GOLD = {
-  color: "#d4a017",
-  fontFamily: "'Share Tech Mono', monospace",
-  fontSize: 12,
-}
-const WHITE = {
-  color: "#fff",
-  fontFamily: "'Share Tech Mono', monospace",
-  fontSize: 12,
-}
-
 function Scene({ bg, children }: { bg: string; children: React.ReactNode }) {
   return (
-    <div
-      style={{
-        position: "relative",
-        width: "100vw",
-        height: "100vh",
-        overflow: "hidden",
-      }}
-    >
-      <img
-        src={bg}
-        alt=""
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          objectPosition: "center center",
-          userSelect: "none",
-        }}
-      />
+    <div style={{ position: "relative", width: "100vw", height: "100vh", overflow: "hidden" }}>
+      <img src={bg} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center center", userSelect: "none" }} />
       {children}
     </div>
   )
@@ -642,10 +463,7 @@ export default function App() {
   const [conduct, setConduct] = useState(80)
   const [scenarioIdx, setScenarioIdx] = useState(0)
   const [selectedCode, setSelectedCode] = useState<1 | 2>(2)
-  const [selectedUnits, setSelectedUnits] = useState<Record<FireUnit, boolean>>({
-    ABTR: true,
-    SIATE: false,
-  })
+  const [selectedUnits, setSelectedUnits] = useState<Record<FireUnit, boolean>>({ ABTR: true, SIATE: false })
   const [fleet, setFleet] = useState<FleetStatus>(createInitialFleet)
   const [callsCompleted, setCallsCompleted] = useState(0)
   const [dispatchAlert, setDispatchAlert] = useState("")
@@ -706,9 +524,7 @@ export default function App() {
   const processDecision = useCallback(
     (decision: Decision) => {
       const s = SCENARIOS[scenarioIdx]
-      const chosenUnits = (["ABTR", "SIATE"] as FireUnit[]).filter(
-        (unit) => selectedUnits[unit]
-      )
+      const chosenUnits = (["ABTR", "SIATE"] as FireUnit[]).filter((unit) => selectedUnits[unit])
 
       if (decision === "FIRE" && chosenUnits.length === 0) {
         setDispatchAlert("SELECIONE AO MENOS UMA VIATURA DO 193")
@@ -716,9 +532,7 @@ export default function App() {
         return
       }
 
-      const unavailableUnit = chosenUnits.find(
-        (unit) => fleet[unit].total - fleet[unit].returnAfter.length <= 0
-      )
+      const unavailableUnit = chosenUnits.find((unit) => fleet[unit].total - fleet[unit].returnAfter.length <= 0)
       if (decision === "FIRE" && unavailableUnit) {
         setDispatchAlert(`SEM VIATURA ${unavailableUnit} DISPONÍVEL`)
         playError()
@@ -730,13 +544,8 @@ export default function App() {
       setDispatchAlert("")
 
       const requiredUnits = s.requiredUnits ?? []
-      const hasCorrectUnits =
-        chosenUnits.length === requiredUnits.length &&
-        requiredUnits.every((unit) => chosenUnits.includes(unit))
-      const correct =
-        decision === s.correctDecision &&
-        (decision !== "FIRE" ||
-          (hasCorrectUnits && selectedCode === s.requiredCode))
+      const hasCorrectUnits = chosenUnits.length === requiredUnits.length && requiredUnits.every((unit) => chosenUnits.includes(unit))
+      const correct = decision === s.correctDecision && (decision !== "FIRE" || (hasCorrectUnits && selectedCode === s.requiredCode))
       setIsCorrectDecision(correct)
 
       const nextCallsCompleted = callsCompleted + 1
@@ -744,32 +553,14 @@ export default function App() {
       setFleet((currentFleet) => {
         const nextFleet = createInitialFleet()
         ;(["ABTR", "SIATE"] as FireUnit[]).forEach((unit) => {
-          const newlyEmployed =
-            decision === "FIRE" && chosenUnits.includes(unit)
-              ? [callsCompleted + 2]
-              : []
-          nextFleet[unit].returnAfter = [
-            ...currentFleet[unit].returnAfter,
-            ...newlyEmployed,
-          ].filter((returnAfter) => returnAfter > nextCallsCompleted)
+          const newlyEmployed = decision === "FIRE" && chosenUnits.includes(unit) ? [callsCompleted + 2] : []
+          nextFleet[unit].returnAfter = [...currentFleet[unit].returnAfter, ...newlyEmployed].filter((returnAfter) => returnAfter > nextCallsCompleted)
         })
         return nextFleet
       })
 
-      const newMorale = Math.min(
-        100,
-        Math.max(
-          0,
-          morale + (correct ? s.moraleEffect.correct : s.moraleEffect.wrong)
-        )
-      )
-      const newConduct = Math.min(
-        100,
-        Math.max(
-          0,
-          conduct + (correct ? s.conductEffect.correct : s.conductEffect.wrong)
-        )
-      )
+      const newMorale = Math.min(100, Math.max(0, morale + (correct ? s.moraleEffect.correct : s.moraleEffect.wrong)))
+      const newConduct = Math.min(100, Math.max(0, conduct + (correct ? s.conductEffect.correct : s.conductEffect.wrong)))
       setFeedbackText(correct ? s.feedback.correct : s.feedback.wrong)
       setMorale(newMorale)
       setConduct(newConduct)
@@ -777,11 +568,7 @@ export default function App() {
       if (!checkGameOver(newMorale, newConduct)) {
         if (!correct) {
           playError()
-        } else if (
-          (decision === "FIRE" && selectedCode === 2) ||
-          decision === "SAMU" ||
-          decision === "PM"
-        ) {
+        } else if ((decision === "FIRE" && selectedCode === 2) || decision === "SAMU" || decision === "PM") {
           playDispatchCode2()
         } else {
           playConfirmTransfer()
@@ -825,15 +612,7 @@ export default function App() {
       setGameState("ACTIVE")
       startCountdown(getDecisionTime(next), () => processDecision("DENY"))
     })
-  }, [
-    scenarioIdx,
-    startCountdown,
-    processDecision,
-    playPhoneRing,
-    stopPhoneRing,
-    stopAllSFX,
-    playWin,
-  ])
+  }, [scenarioIdx, startCountdown, processDecision, playPhoneRing, stopPhoneRing, stopAllSFX, playWin])
 
   const answerCall = useCallback(() => {
     stopTimer()
@@ -885,15 +664,7 @@ export default function App() {
       setGameState("ACTIVE")
       startCountdown(getDecisionTime(0), () => processDecision("DENY"))
     })
-  }, [
-    stopTimer,
-    stopAllSFX,
-    startCountdown,
-    processDecision,
-    playBGM,
-    playPhoneRing,
-    stopPhoneRing,
-  ])
+  }, [stopTimer, stopAllSFX, startCountdown, processDecision, playBGM, playPhoneRing, stopPhoneRing])
 
   useEffect(() => {
     if (morale < 40 && gameState !== "GAME_OVER" && gameState !== "MENU") {
@@ -932,38 +703,26 @@ export default function App() {
         if (k === " " && briefCursor < BRIEFING_TEXT.length) {
           e.preventDefault()
           setBriefCursor(BRIEFING_TEXT.length)
-        } else if (
-          (k === "enter" || k === " ") &&
-          briefCursor >= BRIEFING_TEXT.length
-        ) {
+        } else if ((k === "enter" || k === " ") && briefCursor >= BRIEFING_TEXT.length) {
           beginShift()
         }
       }
-      if (
-        gameState === "INSTRUCTIONS" &&
-        (k === "escape" || k === "backspace" || k === "enter")
-      ) {
+      if (gameState === "INSTRUCTIONS" && (k === "escape" || k === "backspace" || k === "enter")) {
         setGameState("MENU")
       }
       if (gameState === "INCOMING" && (k === "z" || k === "enter")) answerCall()
       if (gameState === "ACTIVE") {
         if (k === "1") setSelectedCode(1)
         if (k === "2") setSelectedCode(2)
-        if (k === "a")
-          setSelectedUnits((current) => ({ ...current, ABTR: !current.ABTR }))
-        if (k === "i")
-          setSelectedUnits((current) => ({
-            ...current,
-            SIATE: !current.SIATE,
-          }))
+        if (k === "a") setSelectedUnits((current) => ({ ...current, ABTR: !current.ABTR }))
+        if (k === "i") setSelectedUnits((current) => ({ ...current, SIATE: !current.SIATE }))
         if (k === "z") processDecision("FIRE")
         if (k === "m") processDecision("SAMU")
         if (k === "p") processDecision("PM")
         if (k === "g") processDecision("GM")
         if (k === "x") processDecision("DENY")
       }
-      if (gameState === "FEEDBACK" && (k === "enter" || k === " "))
-        goNextScenario()
+      if (gameState === "FEEDBACK" && (k === "enter" || k === " ")) goNextScenario()
       if (gameState === "GAME_OVER") {
         if (k === "a") restartFromGameOver()
         if (k === "s") {
@@ -1009,8 +768,7 @@ export default function App() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background:
-            "radial-gradient(ellipse at center, #1a1200 0%, #050500 60%, #000 100%)",
+          background: "radial-gradient(ellipse at center, #1a1200 0%, #050500 60%, #000 100%)",
           gap: 28,
           position: "relative",
         }}
@@ -1019,63 +777,21 @@ export default function App() {
           style={{
             position: "fixed",
             inset: 0,
-            backgroundImage:
-              "repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.15) 2px,rgba(0,0,0,0.15) 4px)",
+            backgroundImage: "repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.15) 2px,rgba(0,0,0,0.15) 4px)",
             pointerEvents: "none",
           }}
         />
-
-        <div
-          style={{
-            fontFamily: "'Press Start 2P', monospace",
-            fontSize: 10,
-            color: "#7a6010",
-            letterSpacing: 3,
-          }}
-        >
+        <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 10, color: "#7a6010", letterSpacing: 3 }}>
           ▸ SIMULAÇÃO DE DESPACHO MILITAR ◂
         </div>
         <div style={{ textAlign: "center" }}>
-          <div
-            style={{
-              fontFamily: "'Press Start 2P', monospace",
-              fontSize: 36,
-              color: "#d4a017",
-              textShadow: "4px 4px 0 #000",
-            }}
-          >
-            CÓDIGO 2
-          </div>
-          <div
-            style={{
-              fontFamily: "'Press Start 2P', monospace",
-              fontSize: 14,
-              color: "#fff",
-              marginTop: 12,
-              textShadow: "2px 2px 0 #000",
-            }}
-          >
+          <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 36, color: "#d4a017", textShadow: "4px 4px 0 #000" }}>CÓDIGO 2</div>
+          <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 14, color: "#fff", marginTop: 12, textShadow: "2px 2px 0 #000" }}>
             DESPACHO DE EMERGÊNCIA
           </div>
         </div>
-        <div
-          style={{
-            width: 320,
-            height: 2,
-            background:
-              "linear-gradient(90deg,transparent,#d4a017,transparent)",
-          }}
-        />
-        <div
-          style={{
-            fontFamily: "'Share Tech Mono', monospace",
-            fontSize: 13,
-            color: "#888",
-            textAlign: "center",
-            lineHeight: 2.2,
-            maxWidth: 440,
-          }}
-        >
+        <div style={{ width: 320, height: 2, background: "linear-gradient(90deg,transparent,#d4a017,transparent)" }} />
+        <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#888", textAlign: "center", lineHeight: 2.2, maxWidth: 440 }}>
           Você é o operador recém-designado do COBOM.
           <br />A cidade está em crise. As decisões são suas.
           <br />
@@ -1094,12 +810,6 @@ export default function App() {
             letterSpacing: 2,
             boxShadow: "0 0 20px rgba(212,160,23,0.25)",
           }}
-          onMouseEnter={(e) => {
-            ;(e.currentTarget as HTMLElement).style.background = "#d4a01722"
-          }}
-          onMouseLeave={(e) => {
-            ;(e.currentTarget as HTMLElement).style.background = "transparent"
-          }}
         >
           [ INICIAR TURNO ]
         </button>
@@ -1114,28 +824,11 @@ export default function App() {
             padding: "11px 28px",
             cursor: "pointer",
             letterSpacing: 1,
-            boxShadow: "0 0 12px rgba(57,255,20,0.08)",
-          }}
-          onMouseEnter={(e) => {
-            ;(e.currentTarget as HTMLElement).style.borderColor = "#39ff14"
-            ;(e.currentTarget as HTMLElement).style.color = "#39ff14"
-          }}
-          onMouseLeave={(e) => {
-            ;(e.currentTarget as HTMLElement).style.borderColor = "#657565"
-            ;(e.currentTarget as HTMLElement).style.color = "#9eae9e"
           }}
         >
           [ INSTRUÇÕES ]
         </button>
-        <div
-          style={{
-            fontFamily: "'Press Start 2P', monospace",
-            fontSize: 8,
-            color: "#333",
-          }}
-        >
-          Baseado em Papers, Please e 911 Operator
-        </div>
+        <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8, color: "#333" }}>Baseado em Papers, Please e 911 Operator</div>
       </div>
     )
   }
@@ -1144,10 +837,7 @@ export default function App() {
     const instructions = [
       {
         title: "PRIORIDADE",
-        lines: [
-          "[1] CÓDIGO 1 — deslocamento normal, sem sirene.",
-          "[2] CÓDIGO 2 — emergência com risco imediato.",
-        ],
+        lines: ["[1] CÓDIGO 1 — deslocamento normal, sem sirene.", "[2] CÓDIGO 2 — emergência com risco imediato."],
       },
       {
         title: "BOMBEIROS 193",
@@ -1167,10 +857,7 @@ export default function App() {
       },
       {
         title: "ENCERRAMENTO",
-        lines: [
-          "[X] TROTE / NEGAR — encerra chamadas falsas.",
-          "Uma decisão incorreta reduz Moral e Conduta.",
-        ],
+        lines: ["[X] TROTE / NEGAR — encerra chamadas falsas.", "Uma decisão incorreta reduz Moral e Conduta."],
       },
       {
         title: "CONTROLE DE FROTA",
@@ -1182,10 +869,7 @@ export default function App() {
       },
       {
         title: "OBJETIVO",
-        lines: [
-          "Analise relato, localização, natureza e vítimas.",
-          "Preserve a frota e mantenha Moral e Conduta acima de zero.",
-        ],
+        lines: ["Analise relato, localização, natureza e vítimas.", "Preserve a frota e mantenha Moral e Conduta acima de zero."],
       },
     ]
 
@@ -1195,8 +879,7 @@ export default function App() {
           width: "100vw",
           height: "100vh",
           overflow: "hidden",
-          background:
-            "radial-gradient(ellipse at center, #101b10 0%, #030803 65%, #000 100%)",
+          background: "radial-gradient(ellipse at center, #101b10 0%, #030803 65%, #000 100%)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -1206,85 +889,28 @@ export default function App() {
       >
         <div
           style={{
-            position: "absolute",
-            inset: 0,
-            backgroundImage:
-              "repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.22) 2px,rgba(0,0,0,0.22) 4px)",
-            pointerEvents: "none",
-          }}
-        />
-        <div
-          style={{
             width: "min(920px, 94vw)",
             maxHeight: "94vh",
             background: "rgba(3,12,3,0.96)",
             border: "2px solid #315231",
-            boxShadow:
-              "inset 0 0 50px rgba(0,60,0,0.45), 0 0 30px rgba(57,255,20,0.08)",
+            boxShadow: "inset 0 0 50px rgba(0,60,0,0.45), 0 0 30px rgba(57,255,20,0.08)",
             padding: "24px 28px",
             position: "relative",
             zIndex: 1,
           }}
         >
-          <div
-            style={{
-              fontFamily: "'Press Start 2P', monospace",
-              color: "#d4a017",
-              fontSize: 17,
-              textAlign: "center",
-              textShadow: "2px 2px 0 #000",
-              marginBottom: 8,
-            }}
-          >
+          <div style={{ fontFamily: "'Press Start 2P', monospace", color: "#d4a017", fontSize: 17, textAlign: "center", marginBottom: 8 }}>
             MANUAL DO OPERADOR
           </div>
-          <div
-            style={{
-              fontFamily: "'Share Tech Mono', monospace",
-              color: "#657565",
-              fontSize: 12,
-              textAlign: "center",
-              marginBottom: 20,
-            }}
-          >
+          <div style={{ fontFamily: "'Share Tech Mono', monospace", color: "#657565", fontSize: 12, textAlign: "center", marginBottom: 20 }}>
             COBOM — CENTRAL DE OPERAÇÕES
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-              gap: 10,
-            }}
-          >
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
             {instructions.map((section) => (
-              <div
-                key={section.title}
-                style={{
-                  border: "1px solid #1a3a1a",
-                  background: "rgba(0,18,0,0.55)",
-                  padding: "11px 13px",
-                }}
-              >
-                <div
-                  style={{
-                    fontFamily: "'Press Start 2P', monospace",
-                    color: "#39ff14",
-                    fontSize: 8,
-                    marginBottom: 8,
-                  }}
-                >
-                  {section.title}
-                </div>
+              <div key={section.title} style={{ border: "1px solid #1a3a1a", background: "rgba(0,18,0,0.55)", padding: "11px 13px" }}>
+                <div style={{ fontFamily: "'Press Start 2P', monospace", color: "#39ff14", fontSize: 8, marginBottom: 8 }}>{section.title}</div>
                 {section.lines.map((line) => (
-                  <div
-                    key={line}
-                    style={{
-                      fontFamily: "'Share Tech Mono', monospace",
-                      color: "#d4ddd4",
-                      fontSize: 12,
-                      lineHeight: 1.55,
-                    }}
-                  >
+                  <div key={line} style={{ fontFamily: "'Share Tech Mono', monospace", color: "#d4ddd4", fontSize: 12, lineHeight: 1.55 }}>
                     {line}
                   </div>
                 ))}
@@ -1336,52 +962,14 @@ export default function App() {
             position: "relative",
           }}
         >
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              backgroundImage:
-                "repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.18) 2px,rgba(0,0,0,0.18) 4px)",
-              pointerEvents: "none",
-            }}
-          />
-          <pre
-            style={{
-              ...G,
-              fontSize: 13,
-              lineHeight: 1.9,
-              whiteSpace: "pre-wrap",
-              position: "relative",
-              zIndex: 1,
-            }}
-          >
+          <pre style={{ ...G, fontSize: 13, lineHeight: 1.9, whiteSpace: "pre-wrap", position: "relative", zIndex: 1 }}>
             {BRIEFING_TEXT.slice(0, briefCursor)}
-            {!done && (
-              <span
-                style={{
-                  animation: "blink 0.8s infinite",
-                  display: "inline-block",
-                }}
-              >
-                █
-              </span>
-            )}
+            {!done && <span style={{ animation: "blink 0.8s infinite", display: "inline-block" }}>█</span>}
           </pre>
           {!done && (
             <button
               onClick={() => setBriefCursor(BRIEFING_TEXT.length)}
-              style={{
-                display: "block",
-                marginTop: 18,
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                ...GOLD,
-                fontFamily: "'Press Start 2P', monospace",
-                fontSize: 8,
-                position: "relative",
-                zIndex: 1,
-              }}
+              style={{ display: "block", marginTop: 18, background: "transparent", border: "none", cursor: "pointer", ...GOLD, fontFamily: "'Press Start 2P', monospace", fontSize: 8 }}
             >
               [ SPACE – ACELERAR TEXTO ]
             </button>
@@ -1389,19 +977,7 @@ export default function App() {
           {done && (
             <button
               onClick={beginShift}
-              style={{
-                display: "block",
-                marginTop: 18,
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                ...G,
-                fontFamily: "'Press Start 2P', monospace",
-                fontSize: 9,
-                animation: "blink 1s infinite",
-                position: "relative",
-                zIndex: 1,
-              }}
+              style={{ display: "block", marginTop: 18, background: "transparent", border: "none", cursor: "pointer", ...G, fontFamily: "'Press Start 2P', monospace", fontSize: 9, animation: "blink 1s infinite" }}
             >
               [ ENTER – INICIAR TURNO ]
             </button>
@@ -1418,54 +994,17 @@ export default function App() {
         <Monitor>
           <FleetPanel fleet={fleet} />
           <TimerBar value={timer} max={25} />
-          <div
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 12,
-            }}
-          >
-            <div
-              style={{ fontSize: 32, animation: "phone-ring 0.4s infinite" }}
-            >
-              📞
-            </div>
-            <div
-              style={{
-                ...G,
-                fontFamily: "'Press Start 2P', monospace",
-                fontSize: 9,
-                textAlign: "center",
-                animation: "blink 0.9s infinite",
-              }}
-            >
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
+            <div style={{ fontSize: 32, animation: "phone-ring 0.4s infinite" }}>📞</div>
+            <div style={{ ...G, fontFamily: "'Press Start 2P', monospace", fontSize: 9, textAlign: "center", animation: "blink 0.9s infinite" }}>
               [CHAMADA ENTRANDO]
             </div>
-            <div
-              style={{
-                ...G,
-                fontSize: 11,
-                textAlign: "center",
-                lineHeight: 1.9,
-              }}
-            >
+            <div style={{ ...G, fontSize: 11, textAlign: "center", lineHeight: 1.9 }}>
               [{scenario.callerVoice}]
               <br />
               <span style={{ color: "#fff" }}>{scenario.incomingSnippet}</span>
             </div>
-            <div
-              style={{
-                ...GOLD,
-                fontFamily: "'Press Start 2P', monospace",
-                fontSize: 9,
-                marginTop: 6,
-              }}
-            >
-              Atender (Z) ?
-            </div>
+            <div style={{ ...GOLD, fontFamily: "'Press Start 2P', monospace", fontSize: 9, marginTop: 6 }}>Atender (Z) ?</div>
           </div>
           <div style={{ ...G, fontSize: 10, textAlign: "center" }}>
             Ocorrência {scenarioIdx + 1} / {SCENARIOS.length}
@@ -1475,9 +1014,7 @@ export default function App() {
           <Btn onClick={answerCall} color="#39ff14">
             [Z] ATENDER CHAMADA
           </Btn>
-          <span style={{ ...G, fontSize: 10, marginLeft: "auto" }}>
-            Linha 1 — PT-BR
-          </span>
+          <span style={{ ...G, fontSize: 10, marginLeft: "auto" }}>Linha 1 — PT-BR</span>
         </ActionBar>
       </Scene>
     )
@@ -1491,55 +1028,264 @@ export default function App() {
           <FleetPanel fleet={fleet} />
           <TimerBar value={timer} max={decisionTime} />
           {timer <= 10 && (
-            <div
-              style={{
-                color: "#ff3333",
-                fontFamily: "'Press Start 2P', monospace",
-                fontSize: 7,
-                textAlign: "center",
-                animation: "blink 0.45s infinite",
-                textShadow: "0 0 8px #ff0000",
-              }}
-            >
+            <div style={{ color: "#ff3333", fontFamily: "'Press Start 2P', monospace", fontSize: 7, textAlign: "center", animation: "blink 0.45s infinite" }}>
               TEMPO CRÍTICO — DECIDA AGORA
             </div>
           )}
-          <div
-            style={{
-              ...G,
-              fontFamily: "'Press Start 2P', monospace",
-              fontSize: 8,
-              animation: "blink 1s infinite",
-            }}
-          >
-            [CHAMADA ATIVA – Linha 1]
-          </div>
-          <div
-            style={{
-              borderTop: "1px solid #1a3a1a",
-              paddingTop: 6,
-              lineHeight: 1.9,
-            }}
-          >
+          <div style={{ ...G, fontFamily: "'Press Start 2P', monospace", fontSize: 8, animation: "blink 1s infinite" }}>[CHAMADA ATIVA – Linha 1]</div>
+          <div style={{ borderTop: "1px solid #1a3a1a", paddingTop: 6, lineHeight: 1.9 }}>
             <div style={GOLD}>[SOLICITANTE]:</div>
-            <div
-              style={{
-                ...WHITE,
-                fontSize: 10,
-                paddingLeft: 6,
-                lineHeight: 1.55,
-              }}
-            >
-              "{scenario.transcript}"
+            <div style={{ ...WHITE, fontSize: 10, paddingLeft: 6, lineHeight: 1.55 }}>"{scenario.transcript}"</div>
+          </div>
+          <div style={{ borderTop: "1px solid #1a3a1a", paddingTop: 6, fontSize: 10, lineHeight: 1.55 }}>
+            <div style={G}>
+              Localização: <span style={WHITE}>[{scenario.location}]</span>
+            </div>
+            <div style={G}>
+              Natureza: <span style={WHITE}>[{scenario.nature}]</span>
+            </div>
+            <div style={G}>
+              Vítimas: <span style={WHITE}>[{scenario.victims}]</span>
             </div>
           </div>
+          <div style={{ borderTop: "1px solid #1a3a1a", paddingTop: 6, fontSize: 10 }}>
+            <div style={G}>
+              Prioridade:{" "}
+              <span
+                onClick={() => setSelectedCode(1)}
+                style={{ cursor: "pointer", color: selectedCode === 1 ? "#39ff14" : "#3a6a3a", textDecoration: selectedCode === 1 ? "underline" : "none" }}
+              >
+                [CÓDIGO 1]
+              </span>{" "}
+              <span
+                onClick={() => setSelectedCode(2)}
+                style={{ cursor: "pointer", color: selectedCode === 2 ? "#ff9900" : "#6a4a20", textDecoration: selectedCode === 2 ? "underline" : "none" }}
+              >
+                [CÓDIGO 2{selectedCode === 2 ? " ✓" : ""}]
+              </span>
+            </div>
+            <div style={{ ...G, fontSize: 10, marginTop: 5 }}>
+              Viaturas 193:{" "}
+              <span
+                onClick={() => setSelectedUnits((current) => ({ ...current, ABTR: !current.ABTR }))}
+                style={{ cursor: "pointer", color: selectedUnits.ABTR ? "#39ff14" : "#3a6a3a" }}
+              >
+                [ABTR{selectedUnits.ABTR ? " ✓" : ""}]
+              </span>{" "}
+              <span
+                onClick={() => setSelectedUnits((current) => ({ ...current, SIATE: !current.SIATE }))}
+                style={{ cursor: "pointer", color: selectedUnits.SIATE ? "#39ff14" : "#3a6a3a" }}
+              >
+                [SIATE{selectedUnits.SIATE ? " ✓" : ""}]
+              </span>
+            </div>
+            {dispatchAlert && (
+              <div style={{ color: "#ff3333", fontFamily: "'Press Start 2P', monospace", fontSize: 7, marginTop: 6, animation: "blink 0.8s infinite" }}>
+                {dispatchAlert}
+              </div>
+            )}
+            <div style={{ color: "#5a8a5a", fontSize: 9, marginTop: 4 }}>193: A/I + Z &nbsp;|&nbsp; Órgãos: M/P/G &nbsp;|&nbsp; Trote: X</div>
+          </div>
+        </Monitor>
+        <ActionBar>
+          <Btn onClick={() => setSelectedCode(1)} color="#39ff14">
+            [1] CÓDIGO 1
+          </Btn>
+          <Btn onClick={() => setSelectedCode(2)} color="#ff9900">
+            [2] CÓDIGO 2
+          </Btn>
+          <Btn onClick={() => setSelectedUnits((current) => ({ ...current, ABTR: !current.ABTR }))} color={selectedUnits.ABTR ? "#39ff14" : "#5a8a5a"}>
+            [A] ABTR
+          </Btn>
+          <Btn onClick={() => setSelectedUnits((current) => ({ ...current, SIATE: !current.SIATE }))} color={selectedUnits.SIATE ? "#39ff14" : "#5a8a5a"}>
+            [I] SIATE
+          </Btn>
+          <Btn onClick={() => processDecision("FIRE")} color="#d4a017">
+            [Z] DESPACHAR 193
+          </Btn>
+          <Btn onClick={() => processDecision("SAMU")} color="#39ff14">
+            [M] SAMU 192
+          </Btn>
+          <Btn onClick={() => processDecision("PM")} color="#4aa3ff">
+            [P] PM 190
+          </Btn>
+          <Btn onClick={() => processDecision("GM")} color="#62c5a8">
+            [G] GM 153
+          </Btn>
+          <Btn onClick={() => processDecision("DENY")} color="#cc2222">
+            [X] TROTE / NEGAR
+          </Btn>
+        </ActionBar>
+      </Scene>
+    )
+  }
+
+  if (gameState === "FEEDBACK") {
+    return (
+      <Scene bg={isCorrectDecision ? bgFeedbackSuccess : morale < 40 ? bgActiveStressed : bgActive}>
+        <Header morale={morale} conduct={conduct} />
+        <Monitor>
+          <FleetPanel fleet={fleet} />
           <div
             style={{
-              borderTop: "1px solid #1a3a1a",
-              paddingTop: 6,
-              fontSize: 10,
-              lineHeight: 1.55,
+              fontFamily: "'Press Start 2P', monospace",
+              fontSize: 9,
+              color: isCorrectDecision ? "#39ff14" : "#ff3333",
+              textAlign: "center",
+              textShadow: `0 0 8px ${isCorrectDecision ? "#39ff14" : "#ff3333"}`,
+              padding: "4px 0",
             }}
           >
-            <div style={G}>
-              Localização: <span
+            {isCorrectDecision ? "▸ DESPACHO CORRETO ◂" : "▸ ERRO DE PROTOCOLO ◂"}
+          </div>
+          <div style={{ borderTop: "1px solid #1a3a1a", paddingTop: 8 }}>
+            <div style={GOLD}>[RELATÓRIO DE RÁDIO]</div>
+            <div style={{ ...WHITE, fontSize: 12, lineHeight: 2, marginTop: 6 }}>{feedbackText}</div>
+          </div>
+          <div style={{ borderTop: "1px solid #1a3a1a", paddingTop: 8, marginTop: "auto" }}>
+            <div style={{ ...G, fontSize: 11 }}>
+              Moral: {morale}/100 &nbsp;|&nbsp; Conduta: {conduct}/100
+            </div>
+          </div>
+        </Monitor>
+        <ActionBar>
+          <span style={{ color: "#666", fontFamily: "'Share Tech Mono', monospace", fontSize: 12 }}>
+            Chamada {scenarioIdx + 1} de {SCENARIOS.length} concluída
+          </span>
+          <Btn onClick={goNextScenario} color="#d4a017">
+            [ENTER] PRÓXIMA CHAMADA
+          </Btn>
+        </ActionBar>
+      </Scene>
+    )
+  }
+
+  if (gameState === "GAME_OVER") {
+    return (
+      <Scene bg={bgGameOver}>
+        <Header morale={morale} conduct={conduct} />
+        <div style={{ position: "absolute", top: "13%", left: 0, width: "100%", bottom: 0, background: "rgba(80,0,0,0.55)", zIndex: 5 }} />
+        <div
+          style={{
+            position: "absolute",
+            bottom: "12%",
+            left: "5%",
+            width: "68%",
+            background: "rgba(0,0,0,0.88)",
+            border: "2px solid #555",
+            padding: "14px 18px",
+            zIndex: 20,
+            fontFamily: "'Share Tech Mono', monospace",
+            fontSize: 14,
+            color: "#ddd",
+            lineHeight: 1.8,
+            textAlign: "center",
+          }}
+        >
+          {gameOverReason}
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            width: "100%",
+            height: "10%",
+            background: "rgba(0,0,0,0.92)",
+            borderTop: "2px solid #2a2a2a",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 28,
+            zIndex: 20,
+          }}
+        >
+          <Btn onClick={restartFromGameOver} color="#d4a017">
+            [A] TENTAR NOVAMENTE
+          </Btn>
+          <Btn
+            onClick={() => {
+              stopTimer()
+              stopBGM()
+              stopAllSFX()
+              setMorale(60)
+              setConduct(80)
+              setGameState("MENU")
+            }}
+            color="#555"
+          >
+            [S] MENU PRINCIPAL
+          </Btn>
+        </div>
+      </Scene>
+    )
+  }
+
+  if (gameState === "WIN") {
+    return (
+      <Scene bg={bgFeedbackSuccess}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "rgba(0,20,0,0.7)",
+            zIndex: 5,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 24,
+          }}
+        >
+          <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 28, color: "#39ff14", textShadow: "3px 3px 0 #006600, 0 0 30px #39ff14" }}>
+            TURNO CONCLUÍDO
+          </div>
+          <div
+            style={{
+              background: "rgba(3,12,3,0.97)",
+              border: "2px solid #1a3a1a",
+              boxShadow: "inset 0 0 40px rgba(0,40,0,0.8)",
+              padding: "28px 40px",
+              textAlign: "center",
+            }}
+          >
+            <div style={{ ...G, fontSize: 13, lineHeight: 2.2 }}>
+              RELATÓRIO FINAL DO TURNO
+              <br />
+              ─────────────────────────
+              <br />
+              Moral da Guarnição: {morale}/100
+              <br />
+              Conduta Militar: {conduct}/100
+              <br />
+              Chamadas atendidas: {SCENARIOS.length}/{SCENARIOS.length}
+              <br />
+              ─────────────────────────
+              <br />
+              <span style={{ color: "#fff" }}>STATUS: APROVADO</span>
+            </div>
+          </div>
+          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 14, color: "#888", textAlign: "center", lineHeight: 2 }}>
+            Você sobreviveu ao turno, Operador.
+            <br />A cidade permanece de pé.
+          </div>
+          <Btn
+            onClick={() => {
+              stopBGM()
+              stopAllSFX()
+              setMorale(60)
+              setConduct(80)
+              setScenarioIdx(0)
+              setGameState("MENU")
+            }}
+            color="#39ff14"
+          >
+            [ MENU PRINCIPAL ]
+          </Btn>
+        </div>
+      </Scene>
+    )
+  }
+
+  return null
+}
