@@ -8,17 +8,17 @@ function makeAudio(src: string, volume = 1, loop = false) {
 }
 
 export function useSoundEffects() {
-  const bgm          = useRef<HTMLAudioElement | null>(null)
-  const radioStatic  = useRef<HTMLAudioElement | null>(null)
-  const evilCue      = useRef<HTMLAudioElement | null>(null)
-  const whisper      = useRef<HTMLAudioElement | null>(null)
-  const phoneRing    = useRef<HTMLAudioElement | null>(null)
-  const rotaryDial   = useRef<HTMLAudioElement | null>(null)
-  const siren        = useRef<HTMLAudioElement | null>(null)
-  const wrongBuzz    = useRef<HTMLAudioElement | null>(null)
-  const scream       = useRef<HTMLAudioElement | null>(null)
+  const bgm = useRef<HTMLAudioElement | null>(null)
+  const radioStatic = useRef<HTMLAudioElement | null>(null)
+  const evilCue = useRef<HTMLAudioElement | null>(null)
+  const whisper = useRef<HTMLAudioElement | null>(null)
+  const phoneRing = useRef<HTMLAudioElement | null>(null)
+  const rotaryDial = useRef<HTMLAudioElement | null>(null)
+  const siren = useRef<HTMLAudioElement | null>(null)
+  const wrongBuzz = useRef<HTMLAudioElement | null>(null)
+  const scream = useRef<HTMLAudioElement | null>(null)
   const horrorScream = useRef<HTMLAudioElement | null>(null)
-  const winAmbience  = useRef<HTMLAudioElement | null>(null)
+  const winAmbience = useRef<HTMLAudioElement | null>(null)
 
   const timersRef = useRef<number[]>([])
 
@@ -34,17 +34,17 @@ export function useSoundEffects() {
   }, [])
 
   useEffect(() => {
-    bgm.current          = makeAudio("/sounds/creepy_ambience.mp3", 0.30, true)
-    radioStatic.current  = makeAudio("/sounds/radio_fundo.mp3", 0.10, true)
-    evilCue.current      = makeAudio("/sounds/background_evil_cue.mp3", 0.35, false)
-    whisper.current      = makeAudio("/sounds/whisper_voices.mp3", 0.22, true)
-    phoneRing.current    = makeAudio("/sounds/telephone_ring.mp3", 0.60, true)
-    rotaryDial.current   = makeAudio("/sounds/rotary_phone_dial.mp3", 0.50, false)
-    siren.current        = makeAudio("/sounds/siren_approaching.mp3", 0.45, false)
-    wrongBuzz.current    = makeAudio("/sounds/wrong_buzzer.mp3", 0.50, false)
-    scream.current       = makeAudio("/sounds/scream.mp3", 0.60, false)
+    bgm.current = makeAudio("/sounds/creepy_ambience.mp3", 0.3, true)
+    radioStatic.current = makeAudio("/sounds/radio_fundo.mp3", 0.1, true)
+    evilCue.current = makeAudio("/sounds/background_evil_cue.mp3", 0.35, false)
+    whisper.current = makeAudio("/sounds/whisper_voices.mp3", 0.22, true)
+    phoneRing.current = makeAudio("/sounds/telephone_ring.mp3", 0.6, true)
+    rotaryDial.current = makeAudio("/sounds/rotary_phone_dial.mp3", 0.5, false)
+    siren.current = makeAudio("/sounds/siren_approaching.mp3", 0.45, false)
+    wrongBuzz.current = makeAudio("/sounds/wrong_buzzer.mp3", 0.5, false)
+    scream.current = makeAudio("/sounds/scream.mp3", 0.6, false)
     horrorScream.current = makeAudio("/sounds/universfield-male-horror-scream-08-352438.mp3", 0.55, false)
-    winAmbience.current  = makeAudio(
+    winAmbience.current = makeAudio(
       "/sounds/freesound_community-car-passing-and-birds-chirping-in-the-background-94401.mp3",
       0.35,
       true
@@ -52,27 +52,15 @@ export function useSoundEffects() {
 
     return () => {
       clearAudioTimers()
-      ;[
-        bgm,
-        radioStatic,
-        evilCue,
-        whisper,
-        phoneRing,
-        rotaryDial,
-        siren,
-        wrongBuzz,
-        scream,
-        horrorScream,
-        winAmbience,
-      ].forEach((r) => stopAudio(r.current))
+      ;[bgm, radioStatic, evilCue, whisper, phoneRing, rotaryDial, siren, wrongBuzz, scream, horrorScream, winAmbience].forEach((r) =>
+        stopAudio(r.current)
+      )
     }
   }, [clearAudioTimers, stopAudio])
 
   const stopAllSFX = useCallback(() => {
     clearAudioTimers()
-    ;[phoneRing, rotaryDial, siren, wrongBuzz, scream, horrorScream, evilCue].forEach((r) =>
-      stopAudio(r.current)
-    )
+    ;[phoneRing, rotaryDial, siren, wrongBuzz, scream, horrorScream, evilCue].forEach((r) => stopAudio(r.current))
   }, [clearAudioTimers, stopAudio])
 
   const stopBGM = useCallback(() => {
@@ -82,12 +70,8 @@ export function useSoundEffects() {
   const playBGM = useCallback(() => {
     stopAudio(winAmbience.current)
     stopAudio(evilCue.current)
-    if (bgm.current && bgm.current.paused) {
-      bgm.current.play().catch(() => {})
-    }
-    if (radioStatic.current && radioStatic.current.paused) {
-      radioStatic.current.play().catch(() => {})
-    }
+    if (bgm.current && bgm.current.paused) bgm.current.play().catch(() => {})
+    if (radioStatic.current && radioStatic.current.paused) radioStatic.current.play().catch(() => {})
   }, [stopAudio])
 
   const playPhoneRing = useCallback(() => {
